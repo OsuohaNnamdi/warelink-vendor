@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Api } from "../../../APIs/Api";
-import { BiXCircle } from "react-icons/bi";
-import Swal from "sweetalert2"; // Import SweetAlert2
-import { ClipLoader } from "react-spinners"; // Import a spinner component
+import { BiXCircle, BiCheckShield } from "react-icons/bi";
+import Swal from "sweetalert2";
+import { ClipLoader } from "react-spinners";
 
 export const AddProducts = () => {
   const [productData, setProductData] = useState({
@@ -25,23 +25,23 @@ export const AddProducts = () => {
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState([]);
   
-  
-      useEffect(() => {
-        const fetchUserData = async () => {
-         
-            const response = await Api.get('/api/user-profile/');
-            const userData = Array.isArray(response.data) ? response.data[0] : response.data;
-            setUser(userData);
-          
-        };
-    
-        fetchUserData();
-      }, []);
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const response = await Api.get('/api/user-profile/');
+        const userData = Array.isArray(response.data) ? response.data[0] : response.data;
+        setUser(userData);
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      }
+    };
+    fetchUserData();
+  }, []);
 
   // Fetch categories on component mount
   useEffect(() => {
     const fetchCategories = async () => {
-      setLoading(true); // Start loading
+      setLoading(true);
       try {
         const response = await Api.get("/api/category/");
         setCategories(response.data);
@@ -53,7 +53,7 @@ export const AddProducts = () => {
           text: "Failed to fetch categories!",
         });
       } finally {
-        setLoading(false); // Stop loading
+        setLoading(false);
       }
     };
     fetchCategories();
@@ -75,7 +75,7 @@ export const AddProducts = () => {
     const files = e.target.files;
     setProductData({
       ...productData,
-      [name]: name === "main_image" || name === "promo_image" ? files[0] : Array.from(files),
+      [name]: name === "main_image" ? files[0] : Array.from(files),
     });
   };
 
@@ -109,7 +109,7 @@ export const AddProducts = () => {
       }
     });
 
-    setLoading(true); // Start loading
+    setLoading(true);
     try {
       const response = await Api.post("/api/product/", formData, {
         headers: { "Content-Type": "multipart/form-data" },
@@ -143,28 +143,52 @@ export const AddProducts = () => {
         text: "Failed to add product!",
       });
     } finally {
-      setLoading(false); // Stop loading
+      setLoading(false);
     }
   };
 
   return (
     <main className="main-content-wrapper position-relative">
-
+      {/* Banned Overlay - Takes precedence over unverified */}
       {user.is_banned && (
-              <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" 
-                   style={{
-                     backgroundColor: 'rgba(255,255,255,0.8)',
-                     zIndex: 1000,
-                     backdropFilter: 'blur(5px)'
-                   }}>
-                <div className="text-center p-5 bg-white rounded-3 shadow-lg border border-danger">
-                  <BiXCircle className="text-danger mb-3" size={48} />
-                  <h2 className="text-danger mb-3">ACCOUNT BANNED</h2>
-                  <p className="mb-0">This account has been suspended. Please contact support.</p>
-                </div>
-              </div>
-            )}
-      <div className={`container ${user.is_banned ? 'pe-none' : ''}`} style={{ filter: user.is_banned ? 'blur(3px)' : 'none' }}>
+        <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" 
+             style={{
+               backgroundColor: 'rgba(255,255,255,0.8)',
+               zIndex: 1000,
+               backdropFilter: 'blur(5px)'
+             }}>
+          <div className="text-center p-5 bg-white rounded-3 shadow-lg border border-danger">
+            <BiXCircle className="text-danger mb-3" size={48} />
+            <h2 className="text-danger mb-3">ACCOUNT BANNED</h2>
+            <p className="mb-0">This account has been suspended. Please contact support.</p>
+          </div>
+        </div>
+      )}
+      
+      {/* Unverified Overlay - Only shows if not banned */}
+      {!user.is_banned && !user.is_verified && (
+        <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" 
+             style={{
+               backgroundColor: 'rgba(255,255,255,0.8)',
+               zIndex: 1000,
+               backdropFilter: 'blur(5px)'
+             }}>
+          <div className="text-center p-5 bg-white rounded-3 shadow-lg border border-warning">
+            <BiXCircle className="text-warning mb-3" size={48} />
+            <h2 className="text-warning mb-3">ACCOUNT NOT VERIFIED</h2>
+            <p className="mb-3">You need to verify your account to add products.</p>
+            <a href="/support" className="btn btn-warning">
+              Contact Customer Care
+            </a>
+          </div>
+        </div>
+      )}
+
+      <div className={`container ${user.is_banned || !user.is_verified ? 'pe-none' : ''}`} 
+           style={{ 
+             filter: user.is_banned || !user.is_verified ? 'blur(3px)' : 'none',
+             pointerEvents: user.is_banned || !user.is_verified ? 'none' : 'auto'
+           }}>
         <div className="row mb-8">
           <div className="col-md-12">
             <div className="d-md-flex justify-content-between align-items-center">
@@ -229,7 +253,6 @@ export const AddProducts = () => {
                     <div className="mb-3 col-lg-6">
                       <label className="form-label">Price</label>
                       <input
-                        type="number"
                         className="form-control"
                         name="price"
                         value={productData.price}
@@ -241,7 +264,6 @@ export const AddProducts = () => {
                     <div className="mb-3 col-lg-6">
                       <label className="form-label">Quantity</label>
                       <input
-                        type="number"
                         className="form-control"
                         name="quantity"
                         value={productData.quantity}
@@ -275,12 +297,13 @@ export const AddProducts = () => {
                     />
                   </div>
 
-                  <h4 className="mb-4 h5">Product Description</h4>
+                  <h4 className="mb-4 h5">Other Laptop Specification</h4>
                   <div className="mb-3">
-                    <label className="form-label">Description</label>
+                    <label className="form-label">Specification</label>
                     <textarea
                       className="form-control"
                       name="description"
+                      placeholder="example: Allenware || 4GB Graphics Card || 360 inch screen"
                       value={productData.description}
                       onChange={handleInputChange}
                       required
@@ -292,7 +315,6 @@ export const AddProducts = () => {
             </div>
 
             <div className="col-lg-4 col-12">
-
               <div className="card mb-6 card-lg">
                 <div className="card-body p-6">
                   <h4 className="mb-4 h5">Laptop Specifications</h4>

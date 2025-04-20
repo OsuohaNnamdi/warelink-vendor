@@ -42,10 +42,23 @@ export const SingleOrder = () => {
     }, [orderId]);
 
     const handleItemStatusUpdate = async (itemId, newStatus) => {
+        // Find the item in the current order
+        const item = order.order_items.find(item => item.id === itemId);
+        
+        // Check if the item is already delivered
+        if (item.status.toLowerCase() === 'delivered') {
+            Swal.fire({
+                icon: "error",
+                title: "Cannot Update",
+                text: "Delivered items cannot be updated!",
+            });
+            return;
+        }
+
         setLoading(true);
         try {
             // Correct endpoint to update order item status
-            const response = await Api.patch(`/api/orders/${itemId}/`, {
+            const response = await Api.patch(`/api/order-items/${itemId}/`, {
                 status: newStatus
             });
             
@@ -155,8 +168,6 @@ export const SingleOrder = () => {
                                     </span>
                                 </div>
 
-
-
                                 <h5 className="mb-4">Order Items</h5>
                                 <div className="table-responsive">
                                     <table className="table table-bordered">
@@ -215,11 +226,9 @@ export const SingleOrder = () => {
                                                                 className="form-select form-select-sm"
                                                                 value={item.status}
                                                                 onChange={(e) => handleItemStatusUpdate(item.id, e.target.value)}
-                                                                disabled={loading}
+                                                                disabled={loading || item.status.toLowerCase() === 'delivered'}
                                                             >
                                                                 <option value="pending">Pending</option>
-                                                                <option value="processing">Processing</option>
-                                                                <option value="shipped">Shipped</option>
                                                                 <option value="delivered">Delivered</option>
                                                                 <option value="cancelled">Cancelled</option>
                                                             </select>

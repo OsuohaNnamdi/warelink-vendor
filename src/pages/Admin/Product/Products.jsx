@@ -22,11 +22,14 @@ export const Product = () => {
         category: ""
     });
     const [showPromoModal, setShowPromoModal] = useState(false); // Control promo modal visibility
+    const [showReviewsModal, setShowReviewsModal] = useState(false); // Control reviews modal visibility
     const [selectedProduct, setSelectedProduct] = useState(null); // Selected product for promotion
     const [promoPrice, setPromoPrice] = useState(""); // Promo price
     const [promoImage, setPromoImage] = useState(null); // Promo image (file)
     const [loading, setLoading] = useState(false); // Loading state
     const [user, setUser] = useState([]);
+    const [reviews, setReviews] = useState([]); // Product reviews
+    const [reviewsLoading, setReviewsLoading] = useState(false); // Reviews loading state
     
     useEffect(() => {
       const fetchUserData = async () => {
@@ -192,6 +195,30 @@ export const Product = () => {
         setOpenDropdownId(null); // Close the dropdown
     };
 
+    // Handle view reviews button click
+    const handleViewReviews = async (product) => {
+        setSelectedProduct(product);
+        console.log(product.id)
+        setReviewsLoading(true);
+        try {
+            const response = await Api.get('/api/review/by_product/', {
+                params: { product_id: product.id }
+            });
+            setReviews(response.data);
+            setShowReviewsModal(true);
+        } catch (error) {
+            console.error("Error fetching reviews:", error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'Failed to fetch product reviews!',
+            });
+        } finally {
+            setReviewsLoading(false);
+            setOpenDropdownId(null); // Close the dropdown
+        }
+    };
+
     // Handle promotion submission
     const handlePromotionSubmit = async () => {
         setLoading(true); // Start loading
@@ -214,6 +241,15 @@ export const Product = () => {
             setPromoPrice(""); // Clear the promo price
             setPromoImage(null); // Clear the file input
         }
+    };
+
+    // Render star ratings
+    const renderStars = (rating) => {
+        return Array(5).fill(0).map((_, i) => (
+            <span key={i} style={{ color: i < rating ? '#ffc107' : '#e4e5e9' }}>
+                ★
+            </span>
+        ));
     };
 
     return (
@@ -368,6 +404,19 @@ export const Product = () => {
                                                                             href="#"
                                                                             onClick={(e) => {
                                                                                 e.preventDefault();
+                                                                                handleViewReviews(product);
+                                                                            }}
+                                                                        >
+                                                                            <i className="bi bi-star-fill me-3" />
+                                                                            View Reviews
+                                                                        </a>
+                                                                    </li>
+                                                                    <li>
+                                                                        <a
+                                                                            className="dropdown-item"
+                                                                            href="#"
+                                                                            onClick={(e) => {
+                                                                                e.preventDefault();
                                                                                 handleEdit(product);
                                                                             }}
                                                                         >
@@ -510,6 +559,49 @@ export const Product = () => {
                         </Button>
                     </Form>
                 </Modal.Body>
+            </Modal>
+
+            {/* Reviews Modal */}
+            <Modal show={showReviewsModal} onHide={() => setShowReviewsModal(false)} size="lg">
+                <Modal.Header closeButton>
+                    <Modal.Title>Product Reviews - {selectedProduct?.name}</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    {reviewsLoading ? (
+                        <div className="text-center py-4">
+                            <ClipLoader color="#36d7b7" size={30} />
+                            <p>Loading reviews...</p>
+                        </div>
+                    ) : reviews.length === 0 ? (
+                        <div className="text-center py-4">
+                            <p>No reviews yet for this product.</p>
+                        </div>
+                    ) : (
+                        <div className="review-list">
+                            {reviews.map((review) => (
+                                <div key={review.id} className="mb-4 pb-3 border-bottom">
+                                    <div className="d-flex justify-content-between align-items-center mb-2">
+                                        <div>
+                                            <strong>{review.user.username}</strong>
+                                            <div className="text-warning">
+                                                {renderStars(review.rating)}
+                                            </div>
+                                        </div>
+                                        <small className="text-muted">
+                                            {new Date(review.created_at).toLocaleDateString()}
+                                        </small>
+                                    </div>
+                                    <p className="mb-0">{review.comment}</p>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowReviewsModal(false)}>
+                        Close
+                    </Button>
+                </Modal.Footer>
             </Modal>
 
             {/* Loading Spinner */}

@@ -18,6 +18,7 @@ import Inventory from './pages/Admin/Inventory/Inventory';
 import { LoadingSpinner } from './components/LoadingSpinner';
 import { ProfilePage } from './pages/Admin/ProfilePage';
 import { SupportPage } from './pages/Admin/SupportPage';
+import SalesPage from './pages/Admin/SalesPage';
 
 function App() {
   const location = useLocation();
@@ -72,6 +73,7 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/dashboard" element={<AdminHomepage />} />
           <Route path="/support" element={<SupportPage />} />
+          <Route path="/sales" element={<SalesPage />} />
           <Route path="/error" element={<Error />} />
           <Route path="*" element={<Navigate to="/error" />} />
 

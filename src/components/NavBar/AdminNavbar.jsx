@@ -279,7 +279,7 @@ export const AdminNavbar = () => {
         <nav className="navbar-vertical-nav d-none d-xl-block">
           <div className="navbar-vertical">
             <div className="px-4 py-5">
-              <a href="/admin" className="navbar-brand">
+              <a href="/" className="navbar-brand">
                 <img
                   src="../assets/images/logo/logo.svg"
                   alt="Logo"

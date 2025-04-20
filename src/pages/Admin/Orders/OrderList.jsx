@@ -10,10 +10,8 @@ Modal.setAppElement("#root");
 
 export const OrderList = () => {
     const [orderItems, setOrderItems] = useState([]);
-    const [order, setOrder] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [openDropdownId, setOpenDropdownId] = useState(null);
     const [searchQuery, setSearchQuery] = useState("");
     const [statusFilter, setStatusFilter] = useState("");
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -82,7 +80,6 @@ export const OrderList = () => {
             fetchOrderItems();
         }
     }, [user.id, searchQuery, statusFilter]);
-    console.log(order)
 
     const handleSearchChange = (e) => {
         setSearchQuery(e.target.value);
@@ -96,18 +93,8 @@ export const OrderList = () => {
         navigate(`/order/${orderItemId}`);
     };
 
-    
+    console.log(orderItems)
 
-    const toggleDropdown = (e, orderItemId) => {
-        e.stopPropagation();
-        setOpenDropdownId(openDropdownId === orderItemId ? null : orderItemId);
-    };
-
-    const openDeleteModal = (e, orderItemId) => {
-        e.stopPropagation();
-        setOrderItemToDelete(orderItemId);
-        setIsDeleteModalOpen(true);
-    };
 
     const closeDeleteModal = () => {
         setIsDeleteModalOpen(false);
@@ -213,101 +200,61 @@ export const OrderList = () => {
                             </div>
                             
                             <div className="card-body p-0">
-  <div className="table-responsive">
-    <table className="table table-centered table-hover text-nowrap table-borderless mb-0">
-      <thead className="bg-light">
-        <tr>
-          <th>Order ID</th>
-          <th>Product</th>
-          <th>Date</th>
-          <th>Status</th>
-          <th>Total</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        {orderItems.map((item) => (
-          <tr 
-            key={item.id} 
-            onClick={() => handleOrderItemClick(item.order_id, item.id)} 
-            style={{ cursor: "pointer" }}
-          >
-            <td>#{item.id}</td>
-            <td>
-              <div className="d-flex align-items-center">
-                <img 
-                  src={item.product.main_image} 
-                  alt={item.product.name}
-                  className="rounded me-3"
-                  width="60"
-                  height="60"
-                />
-                <div>
-                  <h6 className="mb-0">{item.product.name}</h6>
-                  <small className="text-muted">{item.product.processor}</small>
-                </div>
-              </div>
-            </td>
-            <td>{formatDate(item.order_created_at)}</td>
-            <td>
-                <span className={`badge 
-                    ${item.status === 'delivered' ? 'bg-success' : 
-                    item.status === 'pending' ? 'bg-warning' : 
-                    item.status === 'processing' ? 'bg-info' : 
-                    item.status === 'shipped' ? 'bg-primary' : 
-                    item.status === 'cancelled' ? 'bg-danger' : 
-                    'bg-secondary'}`}
-                >
-                    {item.status}
-                </span>
-                                    </td>
-            <td>₦{Number(item.total).toLocaleString()}</td>
-            <td>
-              <div className="dropdown">
-                <a
-                  href="#"
-                  className="text-reset"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleDropdown(e, item.id);
-                  }}
-                >
-                  <i className="feather-icon icon-more-vertical fs-5" />
-                </a>
-                {openDropdownId === item.id && (
-                  <ul 
-                    className="dropdown-menu show" 
-                    style={{ 
-                      top: "auto", 
-                      bottom: "100%", 
-                      left: "50%", 
-                      transform: "translateX(-50%)",
-                      zIndex: 1000
-                    }}
-                  >
-                    <li>
-                      <a
-                        className="dropdown-item"
-                        href="#"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openDeleteModal(e, item.id);
-                        }}
-                      >
-                        <i className="bi bi-trash me-3" />
-                        Delete
-                      </a>
-                    </li>
-                  </ul>
-                )}
-              </div>
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
-</div>
+                                <div className="table-responsive">
+                                  <table className="table table-centered table-hover text-nowrap table-borderless mb-0">
+                                    <thead className="bg-light">
+                                      <tr>
+                                        <th>Order ID</th>
+                                        <th>Product</th>
+                                        <th>Date</th>
+                                        <th>Status</th>
+                                        <th>Total</th>
+                                        <th></th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {orderItems.map((item) => (
+                                        <tr 
+                                          key={item.id} 
+                                          onClick={() => handleOrderItemClick(item.order_id, item.id)} 
+                                          style={{ cursor: "pointer" }}
+                                        >
+                                          <td>#{item.id}</td>
+                                          <td>
+                                            <div className="d-flex align-items-center">
+                                              <img 
+                                                src={item.product.main_image} 
+                                                alt={item.product.name}
+                                                className="rounded me-3"
+                                                width="60"
+                                                height="60"
+                                              />
+                                              <div>
+                                                <h6 className="mb-0">{item.product.name}</h6>
+                                                <small className="text-muted">{item.product.processor}</small>
+                                              </div>
+                                            </div>
+                                          </td>
+                                          <td>{formatDate(item.order_created_at)}</td>
+                                          <td>
+                                              <span className={`badge 
+                                                  ${item.status === 'delivered' ? 'bg-success' : 
+                                                  item.status === 'pending' ? 'bg-warning' : 
+                                                  item.status === 'processing' ? 'bg-info' : 
+                                                  item.status === 'shipped' ? 'bg-primary' : 
+                                                  item.status === 'cancelled' ? 'bg-danger' : 
+                                                  'bg-secondary'}`}
+                                              >
+                                                  {item.status}
+                                              </span>
+                                                                  </td>
+                                          <td>₦{Number(item.total).toLocaleString()}</td> 
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              </div>
                             
                             <div className="border-top d-md-flex justify-content-between align-items-center p-6">
                                 <span>Showing 1 to {orderItems.length} of {orderItems.length} entries</span>
