@@ -14,19 +14,41 @@ import {
 } from "recharts";
 import { ClipLoader } from "react-spinners";
 import { BiXCircle } from "react-icons/bi";
+import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
-import { Api } from "../../APIs/Api";
+import { ProfileCompletionAlert } from "./Admin/ProfileCompletionAlert";
+import { Api } from "../APIs/Api";
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#A28DFF", "#FF6B6B"];
 
-const SalesPage = () => {
+const VendorHomepage = () => {
+  const [user, setUser] = useState({ is_banned: false });
   const [salesData, setSalesData] = useState(null);
   const [orderItems, setOrderItems] = useState([]);
+  const [totalOrderItems, setTotalOrderItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState({ is_banned: false });
-  const [searchQuery, setSearchQuery] = useState("");
+  const [userProfile, setUserProfile] = useState({
+    bankaccount: null,
+    bankname: null
+  });
+  const navigate = useNavigate();
 
   useEffect(() => {
+    // Fetch user data
+    const fetchUserData = async () => {
+      try {
+        const response = await Api.get('/api/user-profile/');
+        const userData = Array.isArray(response.data) ? response.data[0] : response.data;
+        setUser(userData);
+        setUserProfile({
+          bankaccount: userData.bankaccount,
+          bankname: userData.bankname
+        });
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      }
+    };
+
     // Fetch sales data
     const fetchSalesData = async () => {
       try {
@@ -42,19 +64,8 @@ const SalesPage = () => {
       }
     };
 
-    // Fetch user data
-    const fetchUserData = async () => {
-      try {
-        const response = await Api.get('/api/user-profile/');
-        const userData = Array.isArray(response.data) ? response.data[0] : response.data;
-        setUser(userData);
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-      }
-    };
-
-    fetchSalesData();
     fetchUserData();
+    fetchSalesData();
   }, []);
 
   useEffect(() => {
@@ -64,10 +75,10 @@ const SalesPage = () => {
       setLoading(true);
       try {
         const response = await Api.get("/api/orders/");
-        // Extract order items belonging to this vendor with order info
+        // Extract order items belonging to this vendor
         const vendorItems = response.data.flatMap(order => 
           order.order_items
-            .filter(item => item.vendor_id === user.id && item.status === "delivered")
+            .filter(item => item.vendor_id === user.id)
             .map(item => ({
               ...item,
               order_id: order.id,
@@ -76,18 +87,8 @@ const SalesPage = () => {
               payment_info: order.payment_info
             }))
         );
-        
-        // Apply search filter
-        let filteredItems = vendorItems;
-        if (searchQuery) {
-          filteredItems = vendorItems.filter(item => 
-            item.id.toString().includes(searchQuery) ||
-            (item.product && item.product.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-            item.order_id.toString().includes(searchQuery)
-          );
-        }
-        
-        setOrderItems(filteredItems);
+        setTotalOrderItems(vendorItems);
+        setOrderItems(vendorItems.slice(0, 5)); 
       } catch (err) {
         console.error("Error fetching order items:", err);
         Swal.fire({
@@ -101,7 +102,19 @@ const SalesPage = () => {
     };
 
     fetchOrderItems();
-  }, [user.id, searchQuery]);
+  }, [user.id]);
+
+  const handleCompleteProfile = (details) => {
+    setUserProfile(prev => ({
+      ...prev,
+      bankname: details.bankname,
+      bankaccount: details.bankaccount
+    }));
+  };
+
+  const handleOrderItemClick = (orderId, itemId) => {
+    navigate(`/order/${orderId}`);
+  };
 
   // Prepare data for charts
   const categoryBarData = salesData?.salesByCategory?.map(item => ({
@@ -118,7 +131,6 @@ const SalesPage = () => {
       maximumFractionDigits: 0
     }).format(value);
   };
-  
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
@@ -144,22 +156,16 @@ const SalesPage = () => {
       )}
       
       <div className={`container ${user.is_banned ? 'pe-none' : ''}`} style={{ filter: user.is_banned ? 'blur(3px)' : 'none' }}>
+        {/* Welcome Banner */}
         <div className="row mb-8">
           <div className="col-md-12">
-            <div className="d-md-flex justify-content-between align-items-center">
-              <div>
-                <h2>Sales Dashboard</h2>
-                <nav aria-label="breadcrumb">
-                  <ol className="breadcrumb mb-0">
-                    <li className="breadcrumb-item">
-                      <a href="/" className="text-inherit">Dashboard</a>
-                      <span style={{ marginLeft: "8px", marginRight: "8px" }}>&gt;</span>
-                      <a>Sales</a>
-                    </li>
-                  </ol>
-                </nav>
-              </div>
-            </div>
+            <Card className="bg-light border-0 rounded-4" style={{backgroundImage: 'url(../assets/images/slider/slider-image-1.png)', backgroundRepeat: 'no-repeat', backgroundSize: 'cover', backgroundPosition: 'right'}}>
+              <Card.Body className="p-lg-12">
+                <h1>Welcome back to your Dashboard!</h1>
+                <p>Manage your products, track sales, and grow your business.</p>
+                <a href="/add-product" className="btn btn-primary">Add New Product</a>
+              </Card.Body>
+            </Card>
           </div>
         </div>
 
@@ -182,7 +188,7 @@ const SalesPage = () => {
                         </p>
                       </div>
                       <div className="icon-shape bg-light-primary rounded-3">
-                        <i className="bi bi-currency-dollar fs-3 text-primary"></i>
+                        <span className="fs-3 text-primary">₦</span>
                       </div>
                     </div>
                   </Card.Body>
@@ -193,8 +199,8 @@ const SalesPage = () => {
                   <Card.Body className="p-6">
                     <div className="d-flex justify-content-between align-items-center">
                       <div>
-                        <h6 className="mb-0">Delivered Orders</h6>
-                        <p className="mb-0 text-dark fs-4 fw-bold">{orderItems.length}</p>
+                        <h6 className="mb-0">Total Orders</h6>
+                        <p className="mb-0 text-dark fs-4 fw-bold">{totalOrderItems.length}</p>
                       </div>
                       <div className="icon-shape bg-light-success rounded-3">
                         <i className="bi bi-box-seam fs-3 text-success"></i>
@@ -208,7 +214,7 @@ const SalesPage = () => {
                   <Card.Body className="p-6">
                     <div className="d-flex justify-content-between align-items-center">
                       <div>
-                        <h6 className="mb-0">Top Selling Brand</h6>
+                        <h6 className="mb-0">Top Category</h6>
                         <p className="mb-0 text-dark fs-4 fw-bold">
                           {salesData?.salesByCategory?.[0]?.category || "N/A"}
                         </p>
@@ -277,28 +283,12 @@ const SalesPage = () => {
               </div>
             </div>
 
-            {/* Orders Table - This remains unchanged from your original code */}
+            {/* Recent Orders */}
             <div className="row">
               <div className="col-xl-12 col-12 mb-5">
                 <Card className="h-100 card-lg">
-                  <div className="p-6">
-                    <div className="row justify-content-between">
-                      <div className="col-md-4 col-12 mb-2 mb-md-0">
-                        <form className="d-flex" role="search">
-                          <input
-                            className="form-control"
-                            type="search"
-                            placeholder="Search by ID or product"
-                            aria-label="Search"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                          />
-                        </form>
-                      </div>
-                    </div>
-                  </div>
                   <Card.Header className="bg-white py-4">
-                    <h5 className="mb-0">Delivered Orders</h5>
+                    <h5 className="mb-0">Recent Orders</h5>
                   </Card.Header>
                   <Card.Body className="p-0">
                     <div className="table-responsive">
@@ -314,7 +304,7 @@ const SalesPage = () => {
                         </thead>
                         <tbody>
                           {orderItems.map((item) => (
-                            <tr key={item.id}>
+                            <tr key={item.id} onClick={() => handleOrderItemClick(item.order_id, item.id)} style={{ cursor: 'pointer' }}>
                               <td>#{item.id}</td>
                               <td>
                                 <div className="d-flex align-items-center">
@@ -333,37 +323,39 @@ const SalesPage = () => {
                               </td>
                               <td>{formatDate(item.order_created_at)}</td>
                               <td>
-                                <span className="badge bg-success">
+                                <span className={`badge bg-light-${item.status === 'delivered' ? 'success' : item.status === 'pending' ? 'warning' : 'danger'} text-dark-${item.status === 'delivered' ? 'success' : item.status === 'pending' ? 'warning' : 'danger'}`}>
                                   {item.status}
                                 </span>
                               </td>
                               <td>₦{Number(item.total || item.price || 0).toLocaleString()}</td>
                             </tr>
                           ))}
+                          {orderItems.length === 0 && (
+                            <tr>
+                              <td colSpan="5" className="text-center py-4">
+                                No recent orders found
+                              </td>
+                            </tr>
+                          )}
                         </tbody>
                       </Table>
                     </div>
                   </Card.Body>
-                  <div className="border-top d-md-flex justify-content-between align-items-center p-6">
-                    <span>Showing 1 to {orderItems.length} of {orderItems.length} entries</span>
-                    <nav className="mt-2 mt-md-0">
-                      <ul className="pagination mb-0">
-                        <li className="page-item disabled"><a className="page-link" href="#!">Previous</a></li>
-                        <li className="page-item"><a className="page-link active" href="#!">1</a></li>
-                        <li className="page-item"><a className="page-link" href="#!">2</a></li>
-                        <li className="page-item"><a className="page-link" href="#!">3</a></li>
-                        <li className="page-item"><a className="page-link" href="#!">Next</a></li>
-                      </ul>
-                    </nav>
-                  </div>
                 </Card>
               </div>
             </div>
           </>
         )}
       </div>
+      
+      {!userProfile.bankname && user.id ? (
+        <ProfileCompletionAlert
+          userProfile={userProfile} 
+          onComplete={handleCompleteProfile} 
+        />
+      ) : null}
     </main>
   );
 };
 
-export default SalesPage;
+export default VendorHomepage;

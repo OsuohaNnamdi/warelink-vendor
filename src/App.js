@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Route, Routes, Navigate, useLocation } from 'react-router-dom';
 import { Error } from './pages/ErrorPage';
-import { AdminHomepage } from './pages/AdminHomepage';
+import VendorHomepage from './pages/VendorHomepage';
 import { AdminNavbar } from './components/NavBar/AdminNavbar';
 import { Product } from './pages/Admin/Product/Products';
 import { AddProducts } from './pages/Admin/Product/AddProduct';
@@ -71,7 +71,7 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/dashboard" element={<AdminHomepage />} />
+          <Route path="/dashboard" element={<VendorHomepage />} />
           <Route path="/support" element={<SupportPage />} />
           <Route path="/sales" element={<SalesPage />} />
           <Route path="/error" element={<Error />} />
@@ -81,7 +81,7 @@ function App() {
             path="/"
             element={
               <ProtectedRoute>
-                <AdminHomepage />
+                <VendorHomepage />
               </ProtectedRoute>
             }
           />

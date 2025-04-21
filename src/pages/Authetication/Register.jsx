@@ -76,7 +76,7 @@ export const Register = () => {
     setLoading(true);
     
     try {
-      const response = await Api.post('/api/user-vendor/verify-email/', {
+      const response = await Api.post('/api/user/verify-email/', {
         email: formData.email,
         code: verificationCode
       });
