@@ -8,9 +8,9 @@ export const AddProducts = () => {
   const [productData, setProductData] = useState({
     name: "",
     description: "",
-    price: 0.0,
+    price: "",
     category: "",
-    quantity: 0,
+    quantity: "",
     main_image: null,
     other_images: [], 
     processor: "",
@@ -24,11 +24,11 @@ export const AddProducts = () => {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState({
-    is_verified: true,  // Assume verified by default
-    is_banned: false    // Assume not banned by default
+    is_verified: true,
+    is_banned: false
   });
-  const [statusChecked, setStatusChecked] = useState(false); // Track if status check is complete
-  
+  const [statusChecked, setStatusChecked] = useState(false);
+
   // Fetch user data and check verification/banned status
   useEffect(() => {
     const fetchUserData = async () => {
@@ -41,7 +41,6 @@ export const AddProducts = () => {
         });
       } catch (error) {
         console.error("Error fetching user data:", error);
-        // On error, assume unverified (more secure approach)
         setUser({
           is_verified: true,
           is_banned: false
@@ -52,11 +51,8 @@ export const AddProducts = () => {
     };
     
     fetchUserData();
-    
-    // Optional: Set up interval for real-time checks if needed
-    const intervalId = setInterval(fetchUserData, 30000); // Check every 30 seconds
-    
-    return () => clearInterval(intervalId); // Cleanup interval on unmount
+    const intervalId = setInterval(fetchUserData, 30000);
+    return () => clearInterval(intervalId);
   }, []);
 
   // Fetch categories on component mount
@@ -83,10 +79,47 @@ export const AddProducts = () => {
   // Handle input change
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setProductData({ ...productData, [name]: value });
+    
+    // Special handling for quantity field
+    if (name === "quantity") {
+      // Check if the value is empty or a valid positive integer
+      if (value === "" || /^[0-9]*$/.test(value)) {
+        setProductData({ ...productData, [name]: value });
+        // Clear error if valid
+        const newErrors = { ...errors };
+        delete newErrors.quantity;
+        setErrors(newErrors);
+      } else {
+        // Set error if invalid
+        setErrors({ ...errors, quantity: "Only whole numbers are allowed" });
+        return;
+      }
+    } 
+    // Special handling for price field
+    else if (name === "price") {
+      // Check if the value is empty or a valid positive number with up to 2 decimal places
+      if (value === "" || /^[0-9]*\.?[0-9]{0,2}$/.test(value)) {
+        setProductData({ ...productData, [name]: value });
+        // Clear error if valid
+        const newErrors = { ...errors };
+        delete newErrors.price;
+        setErrors(newErrors);
+      } else {
+        // Set error if invalid
+        setErrors({ ...errors, price: "Only numbers with up to 2 decimal places are allowed" });
+        return;
+      }
+    }
+    else {
+      // Normal handling for other fields
+      setProductData({ ...productData, [name]: value });
+    }
 
+    // Clear any existing error for this field
     if (errors[name]) {
-      setErrors({ ...errors, [name]: "" });
+      const newErrors = { ...errors };
+      delete newErrors[name];
+      setErrors(newErrors);
     }
   };
 
@@ -106,8 +139,21 @@ export const AddProducts = () => {
     if (!productData.name) newErrors.name = "Name is required";
     if (!productData.description) newErrors.description = "Description is required";
     if (!productData.category) newErrors.category = "Category is required";
-    if (!productData.price) newErrors.price = "Price is required";
-    if (!productData.quantity) newErrors.quantity = "Quantity is required";
+    
+    // Price validation
+    if (!productData.price) {
+      newErrors.price = "Price is required";
+    } else if (isNaN(productData.price) || parseFloat(productData.price) < 0) {
+      newErrors.price = "Please enter a valid positive number";
+    }
+    
+    // Quantity validation
+    if (!productData.quantity) {
+      newErrors.quantity = "Quantity is required";
+    } else if (isNaN(productData.quantity) || parseInt(productData.quantity) < 0) {
+      newErrors.quantity = "Please enter a valid whole number";
+    }
+    
     if (!productData.main_image) newErrors.main_image = "Main image is required";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -145,9 +191,9 @@ export const AddProducts = () => {
       setProductData({
         name: "",
         description: "",
-        price: 0.0,
+        price: "",
         category: "",
-        quantity: 0,
+        quantity: "",
         main_image: null,
         other_images: [],
         processor: "",
@@ -168,7 +214,6 @@ export const AddProducts = () => {
     }
   };
 
-  // Don't show anything until we've checked the user's status
   if (!statusChecked) {
     return (
       <div className="d-flex justify-content-center align-items-center vh-100">
@@ -179,7 +224,7 @@ export const AddProducts = () => {
 
   return (
     <main className="main-content-wrapper position-relative">
-      {/* Banned Overlay - Takes precedence over unverified */}
+      {/* Banned Overlay */}
       {user.is_banned && (
         <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" 
              style={{
@@ -195,7 +240,7 @@ export const AddProducts = () => {
         </div>
       )}
       
-      {/* Unverified Overlay - Only shows if not banned */}
+      {/* Unverified Overlay */}
       {!user.is_banned && !user.is_verified && (
         <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" 
              style={{
@@ -283,22 +328,44 @@ export const AddProducts = () => {
                     <div className="mb-3 col-lg-6">
                       <label className="form-label">Price</label>
                       <input
-                        className="form-control"
+                        className={`form-control ${errors.price ? 'is-invalid' : ''}`}
+                        type="text"
                         name="price"
                         value={productData.price}
                         onChange={handleInputChange}
                         required
+                        onKeyPress={(e) => {
+                          if (!/[0-9.]/.test(e.key) && 
+                              e.key !== 'Backspace' && 
+                              e.key !== 'Delete' && 
+                              e.key !== 'Tab' && 
+                              e.key !== 'Escape' && 
+                              e.key !== 'Enter') {
+                            e.preventDefault();
+                          }
+                        }}
                       />
                       {errors.price && <div className="text-danger">{errors.price}</div>}
                     </div>
                     <div className="mb-3 col-lg-6">
                       <label className="form-label">Quantity</label>
                       <input
-                        className="form-control"
+                        type="text"
+                        className={`form-control ${errors.quantity ? 'is-invalid' : ''}`}
                         name="quantity"
                         value={productData.quantity}
                         onChange={handleInputChange}
                         required
+                        onKeyPress={(e) => {
+                          if (!/[0-9]/.test(e.key) && 
+                              e.key !== 'Backspace' && 
+                              e.key !== 'Delete' && 
+                              e.key !== 'Tab' && 
+                              e.key !== 'Escape' && 
+                              e.key !== 'Enter') {
+                            e.preventDefault();
+                          }
+                        }}
                       />
                       {errors.quantity && <div className="text-danger">{errors.quantity}</div>}
                     </div>
