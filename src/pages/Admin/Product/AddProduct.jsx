@@ -324,6 +324,7 @@ export const AddProducts = () => {
                       name="other_images"
                       multiple
                       onChange={handleImageChange}
+                      required
                     />
                   </div>
 
@@ -357,6 +358,7 @@ export const AddProducts = () => {
                       name="processor"
                       value={productData.processor}
                       onChange={handleInputChange}
+                      required
                     />
                   </div>
                   <div className="mb-3">
@@ -368,6 +370,7 @@ export const AddProducts = () => {
                       name="ram"
                       value={productData.ram}
                       onChange={handleInputChange}
+                      required
                     />
                   </div>
                   <div className="mb-3">
@@ -379,6 +382,7 @@ export const AddProducts = () => {
                       name="storage"
                       value={productData.storage}
                       onChange={handleInputChange}
+                      required
                     />
                   </div>
                   <div className="mb-3">
@@ -390,6 +394,7 @@ export const AddProducts = () => {
                       name="display"
                       value={productData.display}
                       onChange={handleInputChange}
+                      required
                     />
                   </div>
                   <div className="mb-3">
@@ -401,6 +406,7 @@ export const AddProducts = () => {
                       name="os"
                       value={productData.os}
                       onChange={handleInputChange}
+                      required
                     />
                   </div>
                 </div>
