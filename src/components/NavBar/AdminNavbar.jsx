@@ -349,7 +349,7 @@ export const AdminNavbar = () => {
         <nav className="navbar-vertical-nav offcanvas offcanvas-start navbar-offcanvac" tabIndex={-1} id="offcanvasExample">
           <div className="navbar-vertical">
             <div className="px-4 py-5 d-flex justify-content-between align-items-center">
-              <a href="../index.html" className="navbar-brand">
+              <a href="/" className="navbar-brand">
                 <img
                   src="../assets/images/logo/logo.svg"
                   alt=""
@@ -366,7 +366,7 @@ export const AdminNavbar = () => {
             <div className="navbar-vertical-content flex-grow-1" data-simplebar>
               <ul className="navbar-nav flex-column">
                 <li className="nav-item">
-                  <a className="nav-link active" href="/admin">
+                  <a className="nav-link active" href="/">
                     <div className="d-flex align-items-center">
                       <span className="nav-link-icon"><i className="bi bi-speedometer2" /></span>
                       <span>Dashboard</span>
