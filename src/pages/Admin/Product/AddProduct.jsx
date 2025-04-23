@@ -91,7 +91,7 @@ export const AddProducts = () => {
         setErrors(newErrors);
       } else {
         // Set error if invalid
-        setErrors({ ...errors, quantity: "Only whole numbers are allowed" });
+        setErrors({ ...errors, quantity: "Only numbers are allowed" });
         return;
       }
     } 
@@ -106,7 +106,7 @@ export const AddProducts = () => {
         setErrors(newErrors);
       } else {
         // Set error if invalid
-        setErrors({ ...errors, price: "Only numbers with up to 2 decimal places are allowed" });
+        setErrors({ ...errors, price: "Only numbers are allowed" });
         return;
       }
     }
