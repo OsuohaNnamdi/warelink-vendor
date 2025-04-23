@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { BiUser, BiCalendar, BiIdCard, BiCheckShield, BiXCircle } from "react-icons/bi";
 import { Api } from "../../APIs/Api";
 import Swal from "sweetalert2";
+import { Link } from "react-router-dom";
 
 export const ProfilePage = () => {
   const [user, setUser] = useState(null);
@@ -112,19 +113,22 @@ export const ProfilePage = () => {
       )}
 
       <div className={`container ${user.is_banned ? 'pe-none' : ''}`} style={{ filter: user.is_banned ? 'blur(3px)' : 'none' }}>
-        <div className="row mb-8">
-          <div className="col-md-12">
-            <div>
-              <h2>Profile</h2>
-              <nav aria-label="breadcrumb">
-                <ol className="breadcrumb mb-0">
-                  <li className="breadcrumb-item"><a href="#" className="text-inherit">Dashboard</a></li>
-                  <li className="breadcrumb-item active" aria-current="page">Profile</li>
-                </ol>
-              </nav>
-            </div>
+      <div className="row mb-8">
+        <div className="col-md-12">
+          <div>
+            <h2>Profile</h2>
+            <nav aria-label="breadcrumb">
+                  <ol className="breadcrumb mb-0">
+                    <li className="breadcrumb-item">
+                      <a href="/" className="text-inherit">Dashboard</a>
+                      <span style={{ marginLeft: "8px", marginRight: "8px" }}>&gt;</span>
+                      <a>Profile</a>
+                    </li>
+                  </ol>
+                </nav>
           </div>
         </div>
+      </div>
 
         <div className="row">
           <div className="col-lg-8 col-12">

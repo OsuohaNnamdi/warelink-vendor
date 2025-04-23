@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import axios from 'axios';
 import Swal from "sweetalert2";
 import { CircularProgress } from "@mui/material";
 import { Api } from "../../APIs/Api";
@@ -40,7 +41,7 @@ export const Register = () => {
     
     try {
       // API call to register vendor
-      const response = await Api.post('/api/user-vendor/register/', {
+      const response = await axios.post('https://ware.link.syntechticsolutions.com.ng/api/user-vendor/register/', {
         firstname: formData.firstname,
         lastname: formData.lastname,
         businessname: formData.businessname,
@@ -76,7 +77,7 @@ export const Register = () => {
     setLoading(true);
     
     try {
-      const response = await Api.post('/api/user/verify-email/', {
+      const response = await axios.post('https://ware.link.syntechticsolutions.com.ng/api/user/verify-email/', {
         email: formData.email,
         code: verificationCode
       });
@@ -87,7 +88,7 @@ export const Register = () => {
        
       sessionStorage.setItem("token", response.data.access);
       sessionStorage.setItem("isAuthenticated", true);
-      navigate("/")
+      navigate("/dashboard")
       } else {
         throw new Error("No access token received");
       }
@@ -290,14 +291,14 @@ export const Register = () => {
                       <p className="text-muted">
                         Enter the 6-digit code sent to <br /><strong>{formData.email}</strong>
                       </p>
-                      <small className="text-muted">(Use 123456 for testing)</small>
+                      <small className="text-muted">(Input the code in the text box)</small>
                     </div>
                     <form onSubmit={verifyEmail}>
                       <div className="mb-3">
                         <input
                           type="text"
                           className="form-control form-control-lg text-center"
-                          placeholder="• • • • • • •"
+                          placeholder="• • • • • •"
                           value={verificationCode}
                           onChange={(e) => setVerificationCode(e.target.value)}
                           required

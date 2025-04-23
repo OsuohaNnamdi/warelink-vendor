@@ -10,14 +10,31 @@ import {
   PieChart,
   Pie,
   Cell,
-  Legend
+  Legend,
+  Text
 } from "recharts";
 import { ClipLoader } from "react-spinners";
-import { BiXCircle } from "react-icons/bi";
+import { BiXCircle, BiPieChartAlt, BiBarChartAlt2 } from "react-icons/bi";
 import Swal from "sweetalert2";
 import { Api } from "../../APIs/Api";
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#A28DFF", "#FF6B6B"];
+
+const EmptyChartPlaceholder = ({ chartType }) => {
+  const iconSize = 48;
+  const iconColor = "#ddd";
+  
+  return (
+    <div className="d-flex flex-column justify-content-center align-items-center" style={{ height: "100%" }}>
+      {chartType === 'pie' ? (
+        <BiPieChartAlt size={iconSize} color={iconColor} />
+      ) : (
+        <BiBarChartAlt2 size={iconSize} color={iconColor} />
+      )}
+      <p className="mt-3 text-muted">No sales data available</p>
+    </div>
+  );
+};
 
 const SalesPage = () => {
   const [salesData, setSalesData] = useState(null);
@@ -27,7 +44,6 @@ const SalesPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    // Fetch sales data
     const fetchSalesData = async () => {
       try {
         const response = await Api.get('/api/vendor-sales/');
@@ -39,10 +55,10 @@ const SalesPage = () => {
           title: "Sales Data Error",
           text: "Could not load sales analytics data",
         });
+        setSalesData({}); // Set empty object to indicate no data
       }
     };
 
-    // Fetch user data
     const fetchUserData = async () => {
       try {
         const response = await Api.get('/api/user-profile/');
@@ -53,8 +69,8 @@ const SalesPage = () => {
       }
     };
 
-    fetchSalesData();
-    fetchUserData();
+    Promise.all([fetchSalesData(), fetchUserData()])
+      .finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
@@ -64,7 +80,6 @@ const SalesPage = () => {
       setLoading(true);
       try {
         const response = await Api.get("/api/orders/");
-        // Extract order items belonging to this vendor with order info
         const vendorItems = response.data.flatMap(order => 
           order.order_items
             .filter(item => item.vendor_id === user.id && item.status === "delivered")
@@ -77,7 +92,6 @@ const SalesPage = () => {
             }))
         );
         
-        // Apply search filter
         let filteredItems = vendorItems;
         if (searchQuery) {
           filteredItems = vendorItems.filter(item => 
@@ -103,12 +117,14 @@ const SalesPage = () => {
     fetchOrderItems();
   }, [user.id, searchQuery]);
 
-  // Prepare data for charts
+  // Prepare data for charts with fallback for empty data
   const categoryBarData = salesData?.salesByCategory?.map(item => ({
     name: item.category,
     quantity: item.quantity_sold,
     sales: item.total_sales
   })) || [];
+
+  const hasSalesData = categoryBarData.length > 0;
 
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('en-NG', {
@@ -116,14 +132,41 @@ const SalesPage = () => {
       currency: 'NGN',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
-    }).format(value);
+    }).format(value || 0);
   };
-  
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     const options = { year: 'numeric', month: 'short', day: 'numeric' };
     return new Date(dateString).toLocaleDateString('en-US', options);
+  };
+
+  // Custom label for pie chart
+  const renderCustomizedLabel = ({
+    cx,
+    cy,
+    midAngle,
+    innerRadius,
+    outerRadius,
+    percent,
+    index,
+    name
+  }) => {
+    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+    const x = cx + radius * Math.cos(-midAngle * Math.PI / 180);
+    const y = cy + radius * Math.sin(-midAngle * Math.PI / 180);
+
+    return (
+      <Text
+        x={x}
+        y={y}
+        fill="white"
+        textAnchor="middle"
+        dominantBaseline="central"
+      >
+        {`${(percent * 100).toFixed(0)}%`}
+      </Text>
+    );
   };
 
   return (
@@ -178,7 +221,7 @@ const SalesPage = () => {
                       <div>
                         <h6 className="mb-0">Total Sales</h6>
                         <p className="mb-0 text-dark fs-4 fw-bold">
-                          {salesData ? formatCurrency(salesData.netSales) : '$0'}
+                          {formatCurrency(salesData?.netSales)}
                         </p>
                       </div>
                       <div className="icon-shape bg-light-primary rounded-3">
@@ -210,7 +253,7 @@ const SalesPage = () => {
                       <div>
                         <h6 className="mb-0">Top Selling Brand</h6>
                         <p className="mb-0 text-dark fs-4 fw-bold">
-                          {salesData?.salesByCategory?.[0]?.category || "N/A"}
+                          {hasSalesData ? categoryBarData[0]?.name : "N/A"}
                         </p>
                       </div>
                       <div className="icon-shape bg-light-warning rounded-3">
@@ -231,27 +274,32 @@ const SalesPage = () => {
                   </Card.Header>
                   <Card.Body>
                     <div style={{ height: "300px" }}>
-                      <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                          <Pie
-                            data={categoryBarData}
-                            dataKey="sales"
-                            nameKey="name"
-                            cx="50%"
-                            cy="50%"
-                            outerRadius={80}
-                            label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                          >
-                            {categoryBarData.map((_, index) => (
-                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                            ))}
-                          </Pie>
-                          <Legend />
-                          <Tooltip 
-                            formatter={(value) => formatCurrency(value)}
-                          />
-                        </PieChart>
-                      </ResponsiveContainer>
+                      {hasSalesData ? (
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={categoryBarData}
+                              dataKey="sales"
+                              nameKey="name"
+                              cx="50%"
+                              cy="50%"
+                              outerRadius={80}
+                              label={renderCustomizedLabel}
+                              labelLine={false}
+                            >
+                              {categoryBarData.map((_, index) => (
+                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                              ))}
+                            </Pie>
+                            <Legend />
+                            <Tooltip 
+                              formatter={(value) => formatCurrency(value)}
+                            />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      ) : (
+                        <EmptyChartPlaceholder chartType="pie" />
+                      )}
                     </div>
                   </Card.Body>
                 </Card>
@@ -263,21 +311,30 @@ const SalesPage = () => {
                   </Card.Header>
                   <Card.Body>
                     <div style={{ height: "300px" }}>
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={categoryBarData}>
-                          <XAxis dataKey="name" />
-                          <YAxis />
-                          <Tooltip />
-                          <Bar dataKey="quantity" fill="#8884d8" name="Quantity Sold" />
-                        </BarChart>
-                      </ResponsiveContainer>
+                      {hasSalesData ? (
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={categoryBarData}>
+                            <XAxis dataKey="name" />
+                            <YAxis />
+                            <Tooltip />
+                            <Bar 
+                              dataKey="quantity" 
+                              fill="#8884d8" 
+                              name="Quantity Sold"
+                              radius={[4, 4, 0, 0]}
+                            />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      ) : (
+                        <EmptyChartPlaceholder chartType="bar" />
+                      )}
                     </div>
                   </Card.Body>
                 </Card>
               </div>
             </div>
 
-            {/* Orders Table - This remains unchanged from your original code */}
+            {/* Orders Table */}
             <div className="row">
               <div className="col-xl-12 col-12 mb-5">
                 <Card className="h-100 card-lg">
@@ -301,61 +358,69 @@ const SalesPage = () => {
                     <h5 className="mb-0">Delivered Orders</h5>
                   </Card.Header>
                   <Card.Body className="p-0">
-                    <div className="table-responsive">
-                      <Table className="table-centered table-hover text-nowrap table-borderless mb-0">
-                        <thead className="bg-light">
-                          <tr>
-                            <th>Order ID</th>
-                            <th>Product</th>
-                            <th>Date</th>
-                            <th>Status</th>
-                            <th>Total</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {orderItems.map((item) => (
-                            <tr key={item.id}>
-                              <td>#{item.id}</td>
-                              <td>
-                                <div className="d-flex align-items-center">
-                                  <img
-                                    src={item.product?.main_image || "https://via.placeholder.com/60"}
-                                    alt={item.product?.name || "Product"}
-                                    className="rounded me-3"
-                                    width="60"
-                                    height="60"
-                                  />
-                                  <div>
-                                    <h6 className="mb-0">{item.product?.name || "Unknown Product"}</h6>
-                                    <small className="text-muted">Qty: {item.quantity || 1}</small>
-                                  </div>
-                                </div>
-                              </td>
-                              <td>{formatDate(item.order_created_at)}</td>
-                              <td>
-                                <span className="badge bg-success">
-                                  {item.status}
-                                </span>
-                              </td>
-                              <td>₦{Number(item.total || item.price || 0).toLocaleString()}</td>
+                    {orderItems.length > 0 ? (
+                      <div className="table-responsive">
+                        <Table className="table-centered table-hover text-nowrap table-borderless mb-0">
+                          <thead className="bg-light">
+                            <tr>
+                              <th>Order ID</th>
+                              <th>Product</th>
+                              <th>Date</th>
+                              <th>Status</th>
+                              <th>Total</th>
                             </tr>
-                          ))}
-                        </tbody>
-                      </Table>
-                    </div>
+                          </thead>
+                          <tbody>
+                            {orderItems.map((item) => (
+                              <tr key={item.id}>
+                                <td>#{item.id}</td>
+                                <td>
+                                  <div className="d-flex align-items-center">
+                                    <img
+                                      src={item.product?.main_image || "https://via.placeholder.com/60"}
+                                      alt={item.product?.name || "Product"}
+                                      className="rounded me-3"
+                                      width="60"
+                                      height="60"
+                                    />
+                                    <div>
+                                      <h6 className="mb-0">{item.product?.name || "Unknown Product"}</h6>
+                                      <small className="text-muted">Qty: {item.quantity || 1}</small>
+                                    </div>
+                                  </div>
+                                </td>
+                                <td>{formatDate(item.order_created_at)}</td>
+                                <td>
+                                  <span className="badge bg-success">
+                                    {item.status}
+                                  </span>
+                                </td>
+                                <td>{formatCurrency(item.total || item.price)}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </Table>
+                      </div>
+                    ) : (
+                      <div className="text-center py-5">
+                        <p className="text-muted">No delivered orders found</p>
+                      </div>
+                    )}
                   </Card.Body>
-                  <div className="border-top d-md-flex justify-content-between align-items-center p-6">
-                    <span>Showing 1 to {orderItems.length} of {orderItems.length} entries</span>
-                    <nav className="mt-2 mt-md-0">
-                      <ul className="pagination mb-0">
-                        <li className="page-item disabled"><a className="page-link" href="#!">Previous</a></li>
-                        <li className="page-item"><a className="page-link active" href="#!">1</a></li>
-                        <li className="page-item"><a className="page-link" href="#!">2</a></li>
-                        <li className="page-item"><a className="page-link" href="#!">3</a></li>
-                        <li className="page-item"><a className="page-link" href="#!">Next</a></li>
-                      </ul>
-                    </nav>
-                  </div>
+                  {orderItems.length > 0 && (
+                    <div className="border-top d-md-flex justify-content-between align-items-center p-6">
+                      <span>Showing 1 to {orderItems.length} of {orderItems.length} entries</span>
+                      <nav className="mt-2 mt-md-0">
+                        <ul className="pagination mb-0">
+                          <li className="page-item disabled"><a className="page-link" href="#!">Previous</a></li>
+                          <li className="page-item"><a className="page-link active" href="#!">1</a></li>
+                          <li className="page-item"><a className="page-link" href="#!">2</a></li>
+                          <li className="page-item"><a className="page-link" href="#!">3</a></li>
+                          <li className="page-item"><a className="page-link" href="#!">Next</a></li>
+                        </ul>
+                      </nav>
+                    </div>
+                  )}
                 </Card>
               </div>
             </div>

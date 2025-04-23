@@ -1,19 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { Api } from "../../../APIs/Api";
 import { BiXCircle } from "react-icons/bi";
-import { Modal, Button, Form } from "react-bootstrap"; // Import Bootstrap Modal
-import Swal from "sweetalert2"; // Import SweetAlert2
+import { Modal, Button, Form } from "react-bootstrap";
+import Swal from "sweetalert2";
 import { ClipLoader } from "react-spinners";
 
 export const Product = () => {
-    const [products, setProducts] = useState([]); // All products
-    const [filteredProducts, setFilteredProducts] = useState([]); // Filtered products
-    const [categories, setCategories] = useState([]); // Categories
+    const [products, setProducts] = useState([]);
+    const [filteredProducts, setFilteredProducts] = useState([]);
+    const [categories, setCategories] = useState([]);
     const [category, setCategory] = useState({});
-    const [selectedCategory, setSelectedCategory] = useState(""); // Selected category
-    const [searchTerm, setSearchTerm] = useState(""); // Search term
-    const [openDropdownId, setOpenDropdownId] = useState(null); // Track which dropdown is open
-    const [showEditModal, setShowEditModal] = useState(false); // Control edit modal visibility
+    const [selectedCategory, setSelectedCategory] = useState("");
+    const [searchTerm, setSearchTerm] = useState("");
+    const [showEditModal, setShowEditModal] = useState(false);
     const [editingProduct, setEditingProduct] = useState({
         name: "",
         description: "",
@@ -21,15 +20,16 @@ export const Product = () => {
         quantity: "",
         category: ""
     });
-    const [showPromoModal, setShowPromoModal] = useState(false); // Control promo modal visibility
-    const [showReviewsModal, setShowReviewsModal] = useState(false); // Control reviews modal visibility
-    const [selectedProduct, setSelectedProduct] = useState(null); // Selected product for promotion
-    const [promoPrice, setPromoPrice] = useState(""); // Promo price
-    const [promoImage, setPromoImage] = useState(null); // Promo image (file)
-    const [loading, setLoading] = useState(false); // Loading state
+    const [showPromoModal, setShowPromoModal] = useState(false);
+    const [showReviewsModal, setShowReviewsModal] = useState(false);
+    const [showProductModal, setShowProductModal] = useState(false); // New state for product modal
+    const [selectedProduct, setSelectedProduct] = useState(null);
+    const [promoPrice, setPromoPrice] = useState("");
+    const [promoImage, setPromoImage] = useState(null);
+    const [loading, setLoading] = useState(false);
     const [user, setUser] = useState([]);
-    const [reviews, setReviews] = useState([]); // Product reviews
-    const [reviewsLoading, setReviewsLoading] = useState(false); // Reviews loading state
+    const [reviews, setReviews] = useState([]);
+    const [reviewsLoading, setReviewsLoading] = useState(false);
     
     useEffect(() => {
       const fetchUserData = async () => {
@@ -41,10 +41,9 @@ export const Product = () => {
       fetchUserData();
     }, []);
 
-    // Fetch products and categories on component mount
     useEffect(() => {
         const fetchData = async () => {
-            setLoading(true); // Start loading
+            setLoading(true);
             try {
                 const productResponse = await Api.get('/api/product/');
                 setProducts(productResponse.data);
@@ -60,7 +59,7 @@ export const Product = () => {
                     text: 'Failed to fetch data!',
                 });
             } finally {
-                setLoading(false); // Stop loading
+                setLoading(false);
             }
         };
 
@@ -79,7 +78,6 @@ export const Product = () => {
         fetchData();
     }, []);
 
-    // Handle category selection
     const handleCategoryChange = async (e) => {
         const category = e.target.value;
         setSelectedCategory(category);
@@ -94,12 +92,10 @@ export const Product = () => {
         }
     };
 
-    // Handle search input
     const handleSearchChange = (e) => {
         setSearchTerm(e.target.value);
     };
 
-    // Handle delete product with SweetAlert confirmation
     const handleDelete = async (productId) => {
         const result = await Swal.fire({
             title: 'Are you sure?',
@@ -112,12 +108,12 @@ export const Product = () => {
         });
 
         if (result.isConfirmed) {
-            setLoading(true); // Start loading
+            setLoading(true);
             try {
                 await Api.delete(`/api/product/${productId}/`);
                 setProducts(products.filter(product => product.id !== productId));
                 setFilteredProducts(filteredProducts.filter(product => product.id !== productId));
-                setOpenDropdownId(null);
+                setShowProductModal(false); // Close the product modal after deletion
                 Swal.fire('Deleted!', 'Your product has been deleted.', 'success');
             } catch (error) {
                 console.error("Error deleting product:", error);
@@ -127,15 +123,14 @@ export const Product = () => {
                     text: 'Failed to delete product!',
                 });
             } finally {
-                setLoading(false); // Stop loading
+                setLoading(false);
             }
         }
     };
 
-    // Handle update product with loading state
     const handleUpdateProduct = async (e) => {
         e.preventDefault();
-        setLoading(true); // Start loading
+        setLoading(true);
         try {
             const payload = {
                 name: editingProduct.name,
@@ -156,14 +151,13 @@ export const Product = () => {
                 text: 'Failed to update product!',
             });
         } finally {
-            setLoading(false); // Stop loading
+            setLoading(false);
         }
     };
 
     const handleEdit = (product) => {
-        setEditingProduct(product); // Set the product being edited
-        setShowEditModal(true); // Open the modal
-        setOpenDropdownId(null); // Close the dropdown
+        setEditingProduct(product);
+        setShowEditModal(true);
     };
 
     const handleInputChange = (e) => {
@@ -171,34 +165,13 @@ export const Product = () => {
         setEditingProduct({ ...editingProduct, [name]: value });
     };
 
-    // Toggle dropdown visibility
-    const toggleDropdown = (productId) => {
-        setOpenDropdownId(openDropdownId === productId ? null : productId);
-    };
-
-    // Close dropdown when clicking outside
-    useEffect(() => {
-        const handleClickOutside = (e) => {
-            if (!e.target.closest(".dropdown")) {
-                setOpenDropdownId(null);
-            }
-        };
-
-        document.addEventListener("click", handleClickOutside);
-        return () => document.removeEventListener("click", handleClickOutside);
-    }, []);
-
-    // Handle promote button click - simplified to show single modal
     const handlePromote = (product) => {
-        setSelectedProduct(product); // Set the selected product
-        setShowPromoModal(true); // Open the promo modal
-        setOpenDropdownId(null); // Close the dropdown
+        setSelectedProduct(product);
+        setShowPromoModal(true);
     };
 
-    // Handle view reviews button click
     const handleViewReviews = async (product) => {
         setSelectedProduct(product);
-        console.log(product.id)
         setReviewsLoading(true);
         try {
             const response = await Api.get('/api/review/by_product/', {
@@ -215,13 +188,11 @@ export const Product = () => {
             });
         } finally {
             setReviewsLoading(false);
-            setOpenDropdownId(null); // Close the dropdown
         }
     };
 
-    // Handle promotion submission
     const handlePromotionSubmit = async () => {
-        setLoading(true); // Start loading
+        setLoading(true);
         try {
             const formData = new FormData();
             formData.append("promo_price", promoPrice);
@@ -237,19 +208,24 @@ export const Product = () => {
                 text: 'Failed to promote product!',
             });
         } finally {
-            setLoading(false); // Stop loading
-            setPromoPrice(""); // Clear the promo price
-            setPromoImage(null); // Clear the file input
+            setLoading(false);
+            setPromoPrice("");
+            setPromoImage(null);
         }
     };
 
-    // Render star ratings
     const renderStars = (rating) => {
         return Array(5).fill(0).map((_, i) => (
             <span key={i} style={{ color: i < rating ? '#ffc107' : '#e4e5e9' }}>
                 ★
             </span>
         ));
+    };
+
+    // Handle product click to show modal
+    const handleProductClick = (product) => {
+        setSelectedProduct(product);
+        setShowProductModal(true);
     };
 
     return (
@@ -271,11 +247,9 @@ export const Product = () => {
             <div className={`container ${user.is_banned ? 'pe-none' : ''}`} style={{ filter: user.is_banned ? 'blur(3px)' : 'none' }}>
                 <div className="row mb-8">
                     <div className="col-md-12">
-                        {/* Page header */}
                         <div className="d-md-flex justify-content-between align-items-center">
                             <div>
                                 <h2>Products</h2>
-                                {/* Breadcrumb */}
                                 <nav aria-label="breadcrumb">
                                     <ol className="breadcrumb mb-0">
                                         <li className="breadcrumb-item">
@@ -286,20 +260,17 @@ export const Product = () => {
                                     </ol>
                                 </nav>
                             </div>
-                            {/* Add product button */}
                             <div>
                                 <a href="/add-product" className="btn btn-primary">Add Product</a>
                             </div>
                         </div>
                     </div>
                 </div>
-                {/* Filters and search */}
                 <div className="row">
                     <div className="col-xl-12 col-12 mb-5">
                         <div className="card h-100 card-lg">
                             <div className="px-6 py-6">
                                 <div className="row justify-content-between">
-                                    {/* Search form */}
                                     <div className="col-lg-4 col-md-6 col-12 mb-2 mb-lg-0">
                                         <form className="d-flex" role="search">
                                             <input
@@ -312,7 +283,6 @@ export const Product = () => {
                                             />
                                         </form>
                                     </div>
-                                    {/* Category filter */}
                                     <div className="col-lg-2 col-md-4 col-12">
                                         <select
                                             className="form-select"
@@ -329,7 +299,6 @@ export const Product = () => {
                                     </div>
                                 </div>
                             </div>
-                            {/* Product table */}
                             <div className="card-body p-0">
                                 <div className="table-responsive">
                                     <table className="table table-centered table-hover text-nowrap table-borderless mb-0 table-with-checkbox">
@@ -347,12 +316,11 @@ export const Product = () => {
                                                 <th>Quantity</th>
                                                 <th>Price</th>
                                                 <th>Created at</th>
-                                                <th />
                                             </tr>
                                         </thead>
-                                        <tbody >
+                                        <tbody>
                                             {filteredProducts.map((product) => (
-                                                <tr key={product.id}>
+                                                <tr key={product.id} onClick={() => handleProductClick(product)} style={{ cursor: 'pointer' }}>
                                                     <td>
                                                         <div className="form-check">
                                                             <input className="form-check-input" type="checkbox" defaultValue id={`product${product.id}`} />
@@ -360,9 +328,9 @@ export const Product = () => {
                                                         </div>
                                                     </td>
                                                     <td>
-                                                        <a href="#!"><img src={product.main_image} alt className="icon-shape icon-md" /></a>
+                                                        <img src={product.main_image} alt className="icon-shape icon-md" />
                                                     </td>
-                                                    <td><a href="#" className="text-reset">{product.name}</a></td>
+                                                    <td>{product.name}</td>
                                                     <td>{category[product.category] || 'Uncategorized'}</td>
                                                     <td>
                                                         <span className={`badge bg-light-${product.quantity > 1 ? 'primary' : product.quantity === 0 ? 'danger' : 'warning'} text-dark-${product.quantity > 1 ? 'primary' : product.quantity === 0 ? 'danger' : 'warning'}`}>
@@ -371,83 +339,12 @@ export const Product = () => {
                                                     </td>
                                                     <td>₦ {Number(product.price).toLocaleString()}</td>
                                                     <td>{product.created_at}</td>
-                                                    <td>
-                                                        <div className="dropdown">
-                                                            <a
-                                                                href="#"
-                                                                className="text-reset"
-                                                                onClick={(e) => {
-                                                                    e.preventDefault();
-                                                                    toggleDropdown(product.id);
-                                                                }}
-                                                            >
-                                                                <i className="feather-icon icon-more-vertical fs-5" />
-                                                            </a>
-                                                            {openDropdownId === product.id && (
-                                                                <ul className="dropdown-menu show" style={{ top: "auto", bottom: "100%", left: "50%", transform: "translateX(-50%)" }}>
-                                                                    <li>
-                                                                        <a
-                                                                            className="dropdown-item"
-                                                                            href="#"
-                                                                            onClick={(e) => {
-                                                                                e.preventDefault();
-                                                                                handlePromote(product);
-                                                                            }}
-                                                                        >
-                                                                            <i className="bi bi-megaphone me-3" />
-                                                                            Promote
-                                                                        </a>
-                                                                    </li>
-                                                                    <li>
-                                                                        <a
-                                                                            className="dropdown-item"
-                                                                            href="#"
-                                                                            onClick={(e) => {
-                                                                                e.preventDefault();
-                                                                                handleViewReviews(product);
-                                                                            }}
-                                                                        >
-                                                                            <i className="bi bi-star-fill me-3" />
-                                                                            View Reviews
-                                                                        </a>
-                                                                    </li>
-                                                                    <li>
-                                                                        <a
-                                                                            className="dropdown-item"
-                                                                            href="#"
-                                                                            onClick={(e) => {
-                                                                                e.preventDefault();
-                                                                                handleEdit(product);
-                                                                            }}
-                                                                        >
-                                                                            <i className="bi bi-pencil-square me-3" />
-                                                                            Edit
-                                                                        </a>
-                                                                    </li>
-                                                                    <li>
-                                                                        <a
-                                                                            className="dropdown-item"
-                                                                            href="#"
-                                                                            onClick={(e) => {
-                                                                                e.preventDefault();
-                                                                                handleDelete(product.id);
-                                                                            }}
-                                                                        >
-                                                                            <i className="bi bi-trash me-3" />
-                                                                            Delete
-                                                                        </a>
-                                                                    </li>
-                                                                </ul>
-                                                            )}
-                                                        </div>
-                                                    </td>
                                                 </tr>
                                             ))}
                                         </tbody>
                                     </table>
                                 </div>
                             </div>
-                            {/* Pagination */}
                             <div className="border-top d-md-flex justify-content-between align-items-center px-6 py-6">
                                 <span>Showing 1 to {filteredProducts.length} of {filteredProducts.length} entries</span>
                                 <nav className="mt-2 mt-md-0">
@@ -464,6 +361,66 @@ export const Product = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Product Detail Modal - Replaces the 3-dot dropdown */}
+            <Modal show={showProductModal} onHide={() => setShowProductModal(false)} size="lg">
+                <Modal.Header closeButton>
+                    <Modal.Title>{selectedProduct?.name}</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    {selectedProduct && (
+                        <div className="row">
+                            <div className="col-md-4">
+                                <img 
+                                    src={selectedProduct.main_image} 
+                                    alt={selectedProduct.name} 
+                                    className="img-fluid rounded"
+                                />
+                            </div>
+                            <div className="col-md-8">
+                                <h4 className="mb-3">Product Details</h4>
+                                <p><strong>Category:</strong> {category[selectedProduct.category] || 'Uncategorized'}</p>
+                                <p><strong>Price:</strong> ₦ {Number(selectedProduct.price).toLocaleString()}</p>
+                                <p><strong>Quantity:</strong> {selectedProduct.quantity}</p>
+                                <p><strong>Description:</strong> {selectedProduct.description}</p>
+                                <p><strong>Created at:</strong> {selectedProduct.created_at}</p>
+                                
+                                <div className="d-flex gap-2 mt-4">
+                                    <Button 
+                                        variant="primary" 
+                                        onClick={() => handlePromote(selectedProduct)}
+                                    >
+                                        <i className="bi bi-megaphone me-2"></i>Promote
+                                    </Button>
+                                    <Button 
+                                        variant="info" 
+                                        onClick={() => handleViewReviews(selectedProduct)}
+                                    >
+                                        <i className="bi bi-star-fill me-2"></i>View Reviews
+                                    </Button>
+                                    <Button 
+                                        variant="warning" 
+                                        onClick={() => handleEdit(selectedProduct)}
+                                    >
+                                        <i className="bi bi-pencil-square me-2"></i>Edit
+                                    </Button>
+                                    <Button 
+                                        variant="danger" 
+                                        onClick={() => handleDelete(selectedProduct.id)}
+                                    >
+                                        <i className="bi bi-trash me-2"></i>Delete
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowProductModal(false)}>
+                        Close
+                    </Button>
+                </Modal.Footer>
+            </Modal>
 
             {/* Edit Product Modal */}
             <Modal show={showEditModal} onHide={() => setShowEditModal(false)}>
@@ -538,7 +495,7 @@ export const Product = () => {
                 </Modal.Body>
             </Modal>
 
-            {/* Single Promotion Modal */}
+            {/* Promotion Modal */}
             <Modal show={showPromoModal} onHide={() => setShowPromoModal(false)}>
                 <Modal.Header closeButton>
                     <Modal.Title>Promote Product</Modal.Title>

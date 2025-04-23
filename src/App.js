@@ -18,6 +18,8 @@ import Inventory from './pages/Admin/Inventory/Inventory';
 import { LoadingSpinner } from './components/LoadingSpinner';
 import { ProfilePage } from './pages/Admin/ProfilePage';
 import { SupportPage } from './pages/Admin/SupportPage';
+import { ResetPassword } from './pages/Authetication/ResetPassword';
+import { ForgotPassword } from './pages/Authetication/forgot-password';
 import SalesPage from './pages/Admin/SalesPage';
 
 function App() {
@@ -74,6 +76,8 @@ function App() {
           <Route path="/dashboard" element={<VendorHomepage />} />
           <Route path="/support" element={<SupportPage />} />
           <Route path="/sales" element={<SalesPage />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:uid/:token" element={<ResetPassword />} />
           <Route path="/error" element={<Error />} />
           <Route path="*" element={<Navigate to="/error" />} />
 

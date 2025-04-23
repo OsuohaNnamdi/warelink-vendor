@@ -1,4 +1,4 @@
-import { Api } from '../../APIs/Api';
+import axios from 'axios';
 
 export const LOGIN_REQUEST = 'LOGIN_REQUEST';
 export const LOGIN_SUCCESS = 'LOGIN_SUCCESS';
@@ -11,8 +11,8 @@ export function login(email, password) {
 
       const config = { headers: { "Content-Type": "application/json" } };
 
-      const { data } = await Api.post(
-        `/api/login/`,
+      const { data } = await axios.post(
+        `https://ware.link.syntechticsolutions.com.ng/api/login/`,
         { email, password },
         config
       );

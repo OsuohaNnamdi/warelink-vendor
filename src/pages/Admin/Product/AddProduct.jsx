@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Api } from "../../../APIs/Api";
-import { BiXCircle, BiCheckShield } from "react-icons/bi";
+import { BiXCircle } from "react-icons/bi";
 import Swal from "sweetalert2";
 import { ClipLoader } from "react-spinners";
 
@@ -23,19 +23,40 @@ export const AddProducts = () => {
   const [categories, setCategories] = useState([]);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-  const [user, setUser] = useState([]);
+  const [user, setUser] = useState({
+    is_verified: true,  // Assume verified by default
+    is_banned: false    // Assume not banned by default
+  });
+  const [statusChecked, setStatusChecked] = useState(false); // Track if status check is complete
   
+  // Fetch user data and check verification/banned status
   useEffect(() => {
     const fetchUserData = async () => {
       try {
         const response = await Api.get('/api/user-profile/');
         const userData = Array.isArray(response.data) ? response.data[0] : response.data;
-        setUser(userData);
+        setUser({
+          is_verified: userData.is_verified,
+          is_banned: userData.is_banned
+        });
       } catch (error) {
         console.error("Error fetching user data:", error);
+        // On error, assume unverified (more secure approach)
+        setUser({
+          is_verified: true,
+          is_banned: false
+        });
+      } finally {
+        setStatusChecked(true);
       }
     };
+    
     fetchUserData();
+    
+    // Optional: Set up interval for real-time checks if needed
+    const intervalId = setInterval(fetchUserData, 30000); // Check every 30 seconds
+    
+    return () => clearInterval(intervalId); // Cleanup interval on unmount
   }, []);
 
   // Fetch categories on component mount
@@ -146,6 +167,15 @@ export const AddProducts = () => {
       setLoading(false);
     }
   };
+
+  // Don't show anything until we've checked the user's status
+  if (!statusChecked) {
+    return (
+      <div className="d-flex justify-content-center align-items-center vh-100">
+        <ClipLoader color="#36d7b7" size={50} />
+      </div>
+    );
+  }
 
   return (
     <main className="main-content-wrapper position-relative">
@@ -384,9 +414,9 @@ export const AddProducts = () => {
         </form>
 
         {loading && (
-          <div style={{ display: "flex", justifyContent: "center", alignItems: "center", position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0, 0, 0, 0.5)", zIndex: 9999 }}>
-            <ClipLoader color="#36d7b7" size={50} />
-          </div>
+            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0, 0, 0, 0.5)", zIndex: 9999 }}>
+                <ClipLoader color="#36d7b7" size={50} />
+            </div>
         )}
       </div>
     </main>

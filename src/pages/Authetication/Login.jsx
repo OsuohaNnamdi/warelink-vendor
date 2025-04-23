@@ -54,6 +54,10 @@ export const Login = () => {
       });
   };
 
+  const handleForgotPassword = () => {
+    navigate('/forgot-password', { state: { email } });
+  };
+
   // Function to toggle password visibility
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -125,6 +129,19 @@ export const Login = () => {
                       )}
                     </button>
                   </div>
+                  {error && (
+                    <>
+                      <div className="text-end">
+                        <button 
+                          type="button" 
+                          className="btn btn-link p-0"
+                          onClick={handleForgotPassword}
+                        >
+                          Forgot password?
+                        </button>
+                      </div>
+                    </>
+                  )}
                   <div>
                     Don’t have an account? <a href="/register">Sign Up</a>
                   </div>
