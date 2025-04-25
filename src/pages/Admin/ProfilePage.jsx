@@ -3,6 +3,7 @@ import { BiUser, BiCalendar, BiIdCard, BiCheckShield, BiXCircle } from "react-ic
 import { Api } from "../../APIs/Api";
 import Swal from "sweetalert2";
 import { Link } from "react-router-dom";
+import { ProfileCompletionAlert } from "./ProfileCompletionAlert"; // Import the modal component
 
 export const ProfilePage = () => {
   const [user, setUser] = useState(null);
@@ -10,6 +11,7 @@ export const ProfilePage = () => {
   const [error, setError] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editedUser, setEditedUser] = useState({});
+  const [showBankModal, setShowBankModal] = useState(false); // State for bank modal
 
   // Fetch user data on component mount
   useEffect(() => {
@@ -78,6 +80,25 @@ export const ProfilePage = () => {
     }
   };
 
+  const handleBankEdit = () => {
+    setShowBankModal(true);
+  };
+
+  const handleBankUpdateComplete = (bankDetails) => {
+    // Update the user state with new bank details
+    setUser(prev => ({
+      ...prev,
+      bankname: bankDetails.bank_name,
+      bankaccount: bankDetails.bank_account
+    }));
+    setEditedUser(prev => ({
+      ...prev,
+      bankname: bankDetails.bank_name,
+      bankaccount: bankDetails.bank_account
+    }));
+    setShowBankModal(false);
+  };
+
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
@@ -112,23 +133,31 @@ export const ProfilePage = () => {
         </div>
       )}
 
+      {/* Bank Details Modal */}
+      {showBankModal && (
+        <ProfileCompletionAlert 
+          userProfile={user} 
+          onComplete={handleBankUpdateComplete} 
+        />
+      )}
+
       <div className={`container ${user.is_banned ? 'pe-none' : ''}`} style={{ filter: user.is_banned ? 'blur(3px)' : 'none' }}>
-      <div className="row mb-8">
-        <div className="col-md-12">
-          <div>
-            <h2>Profile</h2>
-            <nav aria-label="breadcrumb">
-                  <ol className="breadcrumb mb-0">
-                    <li className="breadcrumb-item">
-                      <a href="/" className="text-inherit">Dashboard</a>
-                      <span style={{ marginLeft: "8px", marginRight: "8px" }}>&gt;</span>
-                      <a>Profile</a>
-                    </li>
-                  </ol>
-                </nav>
+        <div className="row mb-8">
+          <div className="col-md-12">
+            <div>
+              <h2>Profile</h2>
+              <nav aria-label="breadcrumb">
+                <ol className="breadcrumb mb-0">
+                  <li className="breadcrumb-item">
+                    <a href="/" className="text-inherit">Dashboard</a>
+                    <span style={{ marginLeft: "8px", marginRight: "8px" }}>&gt;</span>
+                    <a>Profile</a>
+                  </li>
+                </ol>
+              </nav>
+            </div>
           </div>
         </div>
-      </div>
 
         <div className="row">
           <div className="col-lg-8 col-12">
@@ -238,41 +267,28 @@ export const ProfilePage = () => {
             {/* Bank Information Card */}
             <div className="card">
               <div className="card-body p-6">
-                <h3 className="mb-6">Bank Information</h3>
+                <div className="d-flex justify-content-between align-items-center mb-6">
+                  <h3 className="mb-0">Bank Information</h3>
+                  <button 
+                    className="btn btn-outline-primary"
+                    onClick={handleBankEdit}
+                    disabled={user.is_banned}
+                  >
+                    Edit Bank Details
+                  </button>
+                </div>
                 <div className="row">
                   <div className="col-md-6 mb-4">
                     <label className="form-label">Bank Name</label>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        className="form-control"
-                        name="bankname"
-                        value={editedUser.bankname || ''}
-                        onChange={handleInputChange}
-                        placeholder="Enter bank name"
-                      />
-                    ) : (
-                      <div className="form-control-plaintext">
-                        {user.bankname || 'Not provided'}
-                      </div>
-                    )}
+                    <div className="form-control-plaintext">
+                      {user.bankname || 'Not provided'}
+                    </div>
                   </div>
                   <div className="col-md-6 mb-4">
                     <label className="form-label">Account Number</label>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        className="form-control"
-                        name="bankaccount"
-                        value={editedUser.bankaccount || ''}
-                        onChange={handleInputChange}
-                        placeholder="Enter account number"
-                      />
-                    ) : (
-                      <div className="form-control-plaintext">
-                        {user.bankaccount || 'Not provided'}
-                      </div>
-                    )}
+                    <div className="form-control-plaintext">
+                      {user.bankaccount || 'Not provided'}
+                    </div>
                   </div>
                 </div>
               </div>
