@@ -93,9 +93,6 @@ export const OrderList = () => {
         navigate(`/order/${orderItemId}`);
     };
 
-    console.log(orderItems)
-
-
     const closeDeleteModal = () => {
         setIsDeleteModalOpen(false);
         setOrderItemToDelete(null);

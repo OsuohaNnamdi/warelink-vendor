@@ -4,12 +4,8 @@ import VendorHomepage from './pages/VendorHomepage';
 import { AdminNavbar } from './components/NavBar/AdminNavbar';
 import { Product } from './pages/Admin/Product/Products';
 import { AddProducts } from './pages/Admin/Product/AddProduct';
-import { Categories } from './pages/Admin/Category/Categories';
-import { AddCategories } from './pages/Admin/Category/AddCategory';
 import { OrderList } from './pages/Admin/Orders/OrderList';
 import { SingleOrder } from './pages/Admin/Orders/SingleOrder';
-import { Customer } from './pages/Admin/Customer/Customer';
-import { Grid } from './pages/Admin/Vendors/Grid';
 import { Reviews } from './pages/Admin/Reviews';
 import { Login } from './pages/Authetication/Login';
 import { useState, useEffect } from 'react';
@@ -74,8 +70,6 @@ function App() {
           <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
           <Route path="/register" element={<Register />} />
           <Route path="/dashboard" element={<VendorHomepage />} />
-          <Route path="/support" element={<SupportPage />} />
-          <Route path="/sales" element={<SalesPage />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password/:uid/:token" element={<ResetPassword />} />
           <Route path="/error" element={<Error />} />
@@ -122,22 +116,6 @@ function App() {
             }
           />
           <Route
-            path="/categories"
-            element={
-              <ProtectedRoute>
-                <Categories />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/add-categories"
-            element={
-              <ProtectedRoute>
-                <AddCategories />
-              </ProtectedRoute>
-            }
-          />
-          <Route
             path="/orders"
             element={
               <ProtectedRoute>
@@ -146,26 +124,26 @@ function App() {
             }
           />
           <Route
+            path="/sales"
+            element={
+              <ProtectedRoute>
+                <SalesPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/support"
+            element={
+              <ProtectedRoute>
+                <SupportPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/order/:orderId"
             element={
               <ProtectedRoute>
                 <SingleOrder />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/customer"
-            element={
-              <ProtectedRoute>
-                <Customer />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/vendor-grid"
-            element={
-              <ProtectedRoute>
-                <Grid />
               </ProtectedRoute>
             }
           />

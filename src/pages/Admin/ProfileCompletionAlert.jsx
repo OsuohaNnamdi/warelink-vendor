@@ -114,7 +114,6 @@ export const ProfileCompletionAlert = ({ userProfile, onComplete }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Check if account has been verified
     if (!bankDetails.account_name) {
       Swal.fire({
         icon: 'warning',
@@ -123,17 +122,14 @@ export const ProfileCompletionAlert = ({ userProfile, onComplete }) => {
       });
       return;
     }
-
+  
     setLoading(true);
     
     try {
-      const updatedProfile = {
-        ...userProfile,
+      const response = await Api.patch(`/api/user-profile/${user.id}/`, {
         bankname: bankDetails.bank_name,
         bankaccount: bankDetails.bank_account
-      };
-
-      const response = await Api.patch(`/api/user-profile/${user.id}/`, updatedProfile);
+      });
       
       if (response.status === 200) {
         Swal.fire({
@@ -141,8 +137,12 @@ export const ProfileCompletionAlert = ({ userProfile, onComplete }) => {
           title: 'Success!',
           text: 'Bank details saved successfully!',
         });
+        // Call onComplete with the new details
+        onComplete({
+          bankname: bankDetails.bank_name,
+          bankaccount: bankDetails.bank_account
+        });
         setShowModal(false);
-        onComplete(bankDetails);
         setShowFloatingButton(false);
       }
     } catch (error) {

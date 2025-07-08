@@ -120,11 +120,15 @@ const VendorHomepage = () => {
   }, [user.id]);
 
   const handleCompleteProfile = (details) => {
-    setUserProfile(prev => ({
+    setUser(prev => ({
       ...prev,
-      bankname: details.bankname,
-      bankaccount: details.bankaccount
+      bankname: details.bank_name,
+      bankaccount: details.bank_account
     }));
+    setUserProfile({
+      bankaccount: details.bank_account,
+      bankname: details.bank_name
+    });
   };
 
   const handleOrderItemClick = (orderId, itemId) => {

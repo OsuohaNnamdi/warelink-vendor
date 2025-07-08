@@ -24,7 +24,7 @@ export const ListView = ({ inventory, loading, handleIncreaseStock, handleDecrea
                 <div className="d-flex align-items-center">
                   <div className="me-3" style={{ width: '60px', height: '60px' }}>
                     <img 
-                      src={item.image || '/images/default-laptop.jpg'} 
+                      src={item.main_image || '/images/default-laptop.jpg'} 
                       alt={item.name}
                       className="img-fluid rounded"
                       style={{ height: '100%', objectFit: 'cover' }}
@@ -35,21 +35,21 @@ export const ListView = ({ inventory, loading, handleIncreaseStock, handleDecrea
                   </div>
                 </div>
               </td>
-              <td>{item.specs}</td>
-              <td>${item.price.toFixed(2)}</td>
+              <td>{item.description}</td>
+              <td>₦ {Number(item.price).toLocaleString()}</td>
               <td>
                 <div className="d-flex align-items-center">
                   <button 
                     className="btn btn-sm btn-outline-secondary"
-                    onClick={() => handleDecreaseStock(item.id)}
+                    onClick={() => handleDecreaseStock(item.id, item.quantity)}
                     disabled={loading.action}
                   >
                     <FiChevronDown />
                   </button>
-                  <span className="mx-2">{item.stock}</span>
+                  <span className="mx-2">{item.quantity}</span>
                   <button 
                     className="btn btn-sm btn-outline-secondary"
-                    onClick={() => handleIncreaseStock(item.id)}
+                    onClick={() => handleIncreaseStock(item.id, item.quantity)}
                     disabled={loading.action}
                   >
                     <FiChevronUp />
@@ -57,11 +57,11 @@ export const ListView = ({ inventory, loading, handleIncreaseStock, handleDecrea
                 </div>
               </td>
               <td>
-                <span className={`badge bg-${getStockStatus(item.stock)}`}>
-                  {item.stock > 15 ? 'High' : item.stock > 5 ? 'Medium' : 'Low'}
+                <span className={`badge bg-${getStockStatus(item.quantity)}`}>
+                  {item.quantity > 15 ? 'High' : item.quantity > 5 ? 'Medium' : 'Low'}
                 </span>
               </td>
-              <td>{formatDate(item.lastUpdated)}</td>
+              <td>{formatDate(item.updated_at)}</td>
               <td>
                 <button
                   className="btn btn-link text-danger"

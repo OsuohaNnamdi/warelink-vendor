@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from "react";
 import "./styles.css";
 import { Api } from "../../APIs/Api";
+import { allPages } from "../../data";
 
 export const AdminNavbar = () => {
   const [showNotification, setShowNotification] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [user, setUser] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
 
 
     useEffect(() => {
@@ -21,6 +24,22 @@ export const AdminNavbar = () => {
     }, []);
 
     sessionStorage.setItem("ban", user.is_banned)
+
+
+    const handleSearch = (e) => {
+  const query = e.target.value.toLowerCase();
+  setSearchQuery(query);
+  
+  if (query.length > 0) {
+    const results = allPages.filter(page => 
+      page.name.toLowerCase().includes(query) || 
+      page.path.toLowerCase().includes(query)
+    );
+    setSearchResults(results);
+  } else {
+    setSearchResults([]);
+  }
+};
 
   const handleLogout = () => {
      
@@ -58,18 +77,34 @@ export const AdminNavbar = () => {
                   <path d="M2 3.5a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 0 1h-11a.5.5 0 0 1-.5-.5zm10.646 2.146a.5.5 0 0 1 .708.708L11.707 8l1.647 1.646a.5.5 0 0 1-.708.708l-2-2a.5.5 0 0 1 0-.708l2-2zM2 6.5a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5zm0 3a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5zm0 3a.5.5 0 0 1 .5-.5h11a.5.5 0 0 1 0 1h-11a.5.5 0 0 1-.5-.5z" />
                 </svg>
               </a>
-              <form role="search">
-                <label htmlFor="search" className="form-label visually-hidden">
-                  Search
-                </label>
-                <input
-                  className="form-control"
-                  type="search"
-                  placeholder="Search"
-                  aria-label="Search"
-                  id="search"
-                />
-              </form>
+             <div className="search-container">
+                <form role="search">
+                  <label htmlFor="search" className="form-label visually-hidden">
+                    Search
+                  </label>
+                  <input
+                    className="form-control"
+                    type="search"
+                    placeholder="Search pages..."
+                    aria-label="Search"
+                    id="search"
+                    value={searchQuery}
+                    onChange={handleSearch}
+                  />
+                </form>
+                
+                {searchResults.length > 0 && (
+                  <div className="search-results">
+                    <ul className="list-group">
+                      {searchResults.map((page, index) => (
+                        <li key={index} className="list-group-item">
+                          <a href={page.path}>{page.name}</a>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
             </div>
             <div>
               <ul className="list-unstyled d-flex align-items-center mb-0 ms-5 ms-lg-0">
@@ -87,7 +122,7 @@ export const AdminNavbar = () => {
                   >
                     <i className="bi bi-bell fs-5" />
                     <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger mt-2 ms-n2">
-                      2
+                      1
                       <span className="visually-hidden">unread messages</span>
                     </span>
                   </a>
@@ -99,7 +134,7 @@ export const AdminNavbar = () => {
                       <div className="border-bottom p-5 d-flex justify-content-between align-items-center">
                         <div>
                           <h5 className="mb-1">Notifications</h5>
-                          <p className="mb-0 small">You have 2 unread messages</p>
+                          <p className="mb-0 small">You have 1 unread message</p>
                         </div>
                         <a
                           href="#"
@@ -126,15 +161,14 @@ export const AdminNavbar = () => {
                           <li className="list-group-item px-5 py-4 list-group-item-action active">
                             <a href="#!" className="text-muted">
                               <div className="d-flex">
-                                <img
-                                  src="../assets/images/avatar/avatar-1.jpg"
-                                  alt=""
-                                  className="avatar avatar-md rounded-circle"
-                                />
+                                <div className="avatar avatar-md rounded-circle bg-info text-white d-flex align-items-center justify-content-center">
+                                  <i className="bi bi-laptop fs-5"></i>
+                                </div>
                                 <div className="ms-4">
                                   <p className="mb-1">
-                                    <span className="text-dark">Your order is placed</span>
-                                    waiting for shipping
+                                    <span className="text-dark">UK Used Laptop Listing</span>
+                                    <br />
+                                    Complete your laptop specifications to increase visibility
                                   </p>
                                   <span>
                                     <svg
@@ -148,7 +182,7 @@ export const AdminNavbar = () => {
                                       <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z" />
                                       <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z" />
                                     </svg>
-                                    <small className="ms-2">1 minute ago</small>
+                                    <small className="ms-2">Just now</small>
                                   </span>
                                 </div>
                               </div>
@@ -164,8 +198,9 @@ export const AdminNavbar = () => {
                                 />
                                 <div className="ms-4">
                                   <p className="mb-1">
-                                    <span className="text-dark">Jitu Chauhan</span>
-                                    answered to your pending order list with notes
+                                    <span className="text-dark">Marketplace Tips</span>
+                                    <br />
+                                    Best practices for selling used laptops in the UK
                                   </p>
                                   <span>
                                     <svg
@@ -185,37 +220,6 @@ export const AdminNavbar = () => {
                               </div>
                             </a>
                           </li>
-                          <li className="list-group-item px-5 py-4 list-group-item-action">
-                            <a href="#!" className="text-muted">
-                              <div className="d-flex">
-                                <img
-                                  src="../assets/images/avatar/avatar-2.jpg"
-                                  alt=""
-                                  className="avatar avatar-md rounded-circle"
-                                />
-                                <div className="ms-4">
-                                  <p className="mb-1">
-                                    <span className="text-dark">You have new messages</span>
-                                    2 unread messages
-                                  </p>
-                                  <span>
-                                    <svg
-                                      xmlns="http://www.w3.org/2000/svg"
-                                      width={12}
-                                      height={12}
-                                      fill="currentColor"
-                                      className="bi bi-clock text-muted"
-                                      viewBox="0 0 16 16"
-                                    >
-                                      <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z" />
-                                      <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z" />
-                                    </svg>
-                                    <small className="ms-2">3 days ago</small>
-                                  </span>
-                                </div>
-                              </div>
-                            </a>
-                          </li>
                         </ul>
                       </div>
                       <div className="border-top px-5 py-4 text-center">
@@ -224,7 +228,6 @@ export const AdminNavbar = () => {
                     </div>
                   )}
                 </li>
-
                 {/* Profile Dropdown */}
                 <li className="dropdown dropdown-start ms-4">
                   <a
@@ -236,11 +239,10 @@ export const AdminNavbar = () => {
                       setShowNotification(false);
                     }}
                   >
-                    <img
-                      src="../assets/images/avatar/avatar-1.jpg"
-                      alt="Profile"
-                      className="avatar avatar-md rounded-circle"
-                    />
+                    <div className="avatar avatar-md rounded-circle bg-primary text-white d-flex align-items-center justify-content-center">
+                      {user.firstname && user.firstname.charAt(0).toUpperCase()}
+                      {user.lastname && user.lastname.charAt(0).toUpperCase()}
+                    </div>
                   </a>
                   {showProfile && (
                     <div 

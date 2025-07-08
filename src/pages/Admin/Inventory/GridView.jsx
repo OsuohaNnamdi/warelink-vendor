@@ -9,7 +9,7 @@ export const GridView = ({ inventory, loading, handleIncreaseStock, handleDecrea
             <div className="position-relative" style={{ height: '200px', overflow: 'hidden' }}>
               <div className="w-100 h-100 d-flex align-items-center justify-content-center bg-light">
                 <img 
-                  src={"https://ware.link.syntechticsolutions.com.ng/"+item.main_image} 
+                  src={item.main_image} 
                   alt={item.name}
                   style={{ 
                     width: '100%',

@@ -12,8 +12,6 @@ export const SingleOrder = () => {
     const [user, setUser] = useState({});
     const navigate = useNavigate();
 
-    console.log(order)
-
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
@@ -42,10 +40,8 @@ export const SingleOrder = () => {
     }, [orderId]);
 
     const handleItemStatusUpdate = async (itemId, newStatus) => {
-        // Find the item in the current order
         const item = order.order_items.find(item => item.id === itemId);
         
-        // Check if the item is already delivered
         if (item.status.toLowerCase() === 'delivered') {
             Swal.fire({
                 icon: "error",
@@ -57,12 +53,10 @@ export const SingleOrder = () => {
 
         setLoading(true);
         try {
-            // Correct endpoint to update order item status
             const response = await Api.patch(`/api/order-items/${itemId}/`, {
                 status: newStatus
             });
             
-            // Update the local state
             setOrder(prev => ({
                 ...prev,
                 order_items: prev.order_items.map(item => 
@@ -124,18 +118,18 @@ export const SingleOrder = () => {
 
     return (
         <main className="main-content-wrapper">
-            <div className="container">
-                <div className="row mb-8">
-                    <div className="col-md-12">
-                        <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-4">
+            <div className="container px-3 px-sm-4 py-4">
+                <div className="row mb-4 mb-md-8">
+                    <div className="col-12">
+                        <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
                             <div>
-                                <h2>Order #{order.order_items.id}</h2>
-                                <nav aria-label="breadcrumb">
+                                <h2 className="h4 mb-1">Order #{order.id}</h2>
+                                <nav aria-label="breadcrumb" className="d-none d-md-block">
                                     <ol className="breadcrumb mb-0">
                                         <a href="/" className="text-inherit">Dashboard</a>
-                                        <span style={{ marginLeft: "8px", marginRight: "8px" }}>&gt;</span>
+                                        <span className="mx-1">&gt;</span>
                                         <a href="/orders" className="text-inherit">Orders</a>
-                                        <span style={{ marginLeft: "8px", marginRight: "8px" }}>&gt;</span>
+                                        <span className="mx-1">&gt;</span>
                                         <a>#{order.id}</a>
                                     </ol>
                                 </nav>
@@ -143,7 +137,7 @@ export const SingleOrder = () => {
                             <div>
                                 <button 
                                     onClick={() => navigate('/orders')}
-                                    className="btn btn-primary"
+                                    className="btn btn-primary btn-sm"
                                 >
                                     Back to Orders
                                 </button>
@@ -153,13 +147,13 @@ export const SingleOrder = () => {
                 </div>
 
                 <div className="row">
-                    <div className="col-xl-12 col-12 mb-5">
+                    <div className="col-12 mb-4">
                         <div className="card h-100 card-lg">
-                            <div className="card-body p-6">
-                                <div className="d-flex justify-content-between align-items-center mb-6">
-                                    <div>
-                                        <h4 className="mb-1">Order Details</h4>
-                                        <p className="text-muted mb-0">
+                            <div className="card-body p-4 p-md-6">
+                                <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 mb-md-6">
+                                    <div className="mb-2 mb-md-0">
+                                        <h4 className="h5 mb-1">Order Details</h4>
+                                        <p className="text-muted small mb-0">
                                             Created: {formatDateTime(order.created_at)}
                                         </p>
                                     </div>
@@ -168,14 +162,14 @@ export const SingleOrder = () => {
                                     </span>
                                 </div>
 
-                                <h5 className="mb-4">Order Items</h5>
+                                <h5 className="h6 mb-3 mb-md-4">Order Items</h5>
                                 <div className="table-responsive">
-                                    <table className="table table-bordered">
+                                    <table className="table table-bordered d-none d-md-table">
                                         <thead className="bg-light">
                                             <tr>
                                                 <th>Product</th>
                                                 <th>Price</th>
-                                                <th>Quantity</th>
+                                                <th>Qty</th>
                                                 <th>Total</th>
                                                 <th>Status</th>
                                                 <th>Action</th>
@@ -210,16 +204,16 @@ export const SingleOrder = () => {
                                                         <td>{item.quantity}</td>
                                                         <td>₦{Number(item.total).toLocaleString()}</td>
                                                         <td>
-                                                        <span className={`badge 
-                                                            ${item.status === 'delivered' ? 'bg-success' : 
-                                                            item.status === 'pending' ? 'bg-warning' : 
-                                                            item.status === 'processing' ? 'bg-info' : 
-                                                            item.status === 'shipped' ? 'bg-primary' : 
-                                                            item.status === 'cancelled' ? 'bg-danger' : 
-                                                            'bg-secondary'}`}
-                                                        >
-                                                            {item.status}
-                                                        </span>
+                                                            <span className={`badge 
+                                                                ${item.status === 'delivered' ? 'bg-success' : 
+                                                                item.status === 'pending' ? 'bg-warning' : 
+                                                                item.status === 'processing' ? 'bg-info' : 
+                                                                item.status === 'shipped' ? 'bg-primary' : 
+                                                                item.status === 'cancelled' ? 'bg-danger' : 
+                                                                'bg-secondary'}`}
+                                                            >
+                                                                {item.status}
+                                                            </span>
                                                         </td>
                                                         <td>
                                                             <select
@@ -228,15 +222,85 @@ export const SingleOrder = () => {
                                                                 onChange={(e) => handleItemStatusUpdate(item.id, e.target.value)}
                                                                 disabled={loading || item.status.toLowerCase() === 'delivered'}
                                                             >
-                                                                <option value="pending">Pending</option>
-                                                                <option value="delivered">Delivered</option>
-                                                                <option value="cancelled">Cancelled</option>
+                                                            <option value="pending">Mark as Processing</option>
+                                                            <option value="delivered">Complete Order</option>
+                                                            <option value="cancelled">Cancel Order</option>
                                                             </select>
                                                         </td>
                                                     </tr>
                                                 ))}
                                         </tbody>
                                     </table>
+
+                                    {/* Mobile view cards */}
+                                    <div className="d-md-none">
+                                        {order.order_items
+                                            .filter(item => item.vendor_id === user.id)
+                                            .map((item, index) => (
+                                                <div key={index} className="card mb-3">
+                                                    <div className="card-body">
+                                                        <div className="d-flex align-items-center mb-3">
+                                                            <img 
+                                                                src={item.product.main_image}
+                                                                alt={item.product.name}
+                                                                className="rounded me-3"
+                                                                width="60"
+                                                                onError={(e) => {
+                                                                    e.target.onerror = null;
+                                                                    e.target.src = "https://via.placeholder.com/60";
+                                                                }}
+                                                            />
+                                                            <div>
+                                                                <h6 className="mb-0">{item.product.name}</h6>
+                                                                <small className="text-muted">
+                                                                    {item.product.processor}, {item.product.ram}
+                                                                </small>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <div className="d-flex justify-content-between mb-2">
+                                                            <span className="text-muted">Price:</span>
+                                                            <span>₦{Number(item.product.price).toLocaleString()}</span>
+                                                        </div>
+                                                        
+                                                        <div className="d-flex justify-content-between mb-2">
+                                                            <span className="text-muted">Quantity:</span>
+                                                            <span>{item.quantity}</span>
+                                                        </div>
+                                                        
+                                                        <div className="d-flex justify-content-between mb-2">
+                                                            <span className="text-muted">Total:</span>
+                                                            <span>₦{Number(item.total).toLocaleString()}</span>
+                                                        </div>
+                                                        
+                                                        <div className="d-flex justify-content-between align-items-center mb-3">
+                                                            <span className="text-muted">Status:</span>
+                                                            <span className={`badge 
+                                                                ${item.status === 'delivered' ? 'bg-success' : 
+                                                                item.status === 'pending' ? 'bg-warning' : 
+                                                                item.status === 'processing' ? 'bg-info' : 
+                                                                item.status === 'shipped' ? 'bg-primary' : 
+                                                                item.status === 'cancelled' ? 'bg-danger' : 
+                                                                'bg-secondary'}`}
+                                                            >
+                                                                {item.status}
+                                                            </span>
+                                                        </div>
+                                                        
+                                                        <select
+                                                            className="form-select form-select-sm"
+                                                            value={item.status}
+                                                            onChange={(e) => handleItemStatusUpdate(item.id, e.target.value)}
+                                                            disabled={loading || item.status.toLowerCase() === 'delivered'}
+                                                        >
+                                                            <option value="pending">Mark as Processing</option>
+                                                            <option value="delivered">Complete Order</option>
+                                                            <option value="cancelled">Cancel Order</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -245,21 +309,40 @@ export const SingleOrder = () => {
             </div>
 
             {loading && (
-                <div style={{ 
-                    display: "flex", 
-                    justifyContent: "center", 
-                    alignItems: "center", 
-                    position: "fixed", 
-                    top: 0, 
-                    left: 0, 
-                    right: 0, 
-                    bottom: 0, 
-                    backgroundColor: "rgba(0, 0, 0, 0.5)", 
-                    zIndex: 9999 
-                }}>
+                <div className="loading-overlay">
                     <ClipLoader color="#36d7b7" size={50} />
                 </div>
             )}
+
+            <style jsx>{`
+                .loading-overlay {
+                    display: flex; 
+                    justify-content: center; 
+                    align-items: center; 
+                    position: fixed; 
+                    top: 0; 
+                    left: 0; 
+                    right: 0; 
+                    bottom: 0; 
+                    background-color: rgba(0, 0, 0, 0.5); 
+                    z-index: 9999;
+                }
+                
+                @media (max-width: 767.98px) {
+                    .table-responsive {
+                        overflow-x: auto;
+                        -webkit-overflow-scrolling: touch;
+                    }
+                    
+                    .card-lg {
+                        border-radius: 0.5rem;
+                    }
+                    
+                    .breadcrumb {
+                        font-size: 0.8rem;
+                    }
+                }
+            `}</style>
         </main>
     );
 };
